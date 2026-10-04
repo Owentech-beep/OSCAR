@@ -1,0 +1,40 @@
+{
+  "name": "oscar-ai-agency-os",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OSCAR - AI Agency Operating System for OwenTech",
+  "type": "module",
+  "main": "server/app.js",
+  "scripts": {
+    "dev": "nodemon server/app.js",
+    "start": "node server/app.js",
+    "create-admin": "node server/scripts/create-admin.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@openai/agents": "^0.18.0",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "axios": "^1.20.0",
+    "bcryptjs": "^3.0.2",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-ejs-layouts": "^2.5.1",
+    "express-rate-limit": "^8.0.1",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.18.0",
+    "morgan": "^1.10.0",
+    "resend": "^6.30.0",
+    "three": "^0.186.1",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "nodemon": "^3.1.10"
+  }
+}

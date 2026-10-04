@@ -1,0 +1,753 @@
+<div class="container-fluid py-4">
+  <!-- ================= HEADER ================= -->
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"
+  >
+    <div>
+      <span class="text-uppercase small fw-semibold text-primary"
+        >OSCAR WORKSPACE</span
+      >
+      <h1 class="fw-bold mb-1">Tasks</h1>
+      <p class="text-secondary mb-0">
+        Manage tasks across your active projects.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" onclick="openTaskModal()">
+      <i class="bi bi-plus-lg me-1"></i>
+      New Task
+    </button>
+  </div>
+
+  <!-- ================= FILTERS ================= -->
+  <div class="glass-card p-3 mb-4">
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <label class="form-label small">Search</label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
+          </span>
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control"
+            placeholder="Search tasks..."
+          />
+        </div>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small">Status</label>
+        <select id="statusFilter" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="Todo">Todo</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Review">Review</option>
+          <option value="Completed">Completed</option>
+          <option value="Blocked">Blocked</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small">Priority</label>
+        <select id="priorityFilter" class="form-select">
+          <option value="">All Priorities</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Urgent">Urgent</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 col-lg-4">
+        <label class="form-label small">Project</label>
+        <select id="projectFilter" class="form-select">
+          <option value="">All Projects</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TASK TABLE ================= -->
+  <div class="glass-card">
+    <div
+      class="d-flex justify-content-between align-items-center p-4 border-bottom"
+    >
+      <div>
+        <h5 class="mb-1">Task Management</h5>
+        <p class="text-secondary small mb-0">
+          Tasks stored in your OSCAR database.
+        </p>
+      </div>
+
+      <span id="taskCount" class="badge bg-primary-subtle text-primary">
+        0 Tasks
+      </span>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Priority</th>
+            <th>Due Date</th>
+            <th>Assigned To</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="tasksTableBody">
+          <tr>
+            <td colspan="7" class="text-center py-5 text-secondary">
+              <div class="spinner-border spinner-border-sm me-2"></div>
+              Loading tasks...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================= PAGINATION ================= -->
+    <div
+      class="d-flex justify-content-between align-items-center p-3 border-top"
+    >
+      <small id="paginationInfo" class="text-secondary"> Loading... </small>
+
+      <div class="btn-group">
+        <button
+          id="previousBtn"
+          class="btn btn-sm btn-outline-secondary"
+          onclick="previousPage()"
+        >
+          <i class="bi bi-chevron-left"></i>
+        </button>
+
+        <button
+          id="nextBtn"
+          class="btn btn-sm btn-outline-secondary"
+          onclick="nextPage()"
+        >
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TASK MODAL ================= -->
+
+<div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="modalTitle">New Task</h5>
+          <small class="text-secondary"> Create or update a task. </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="taskForm">
+          <input type="hidden" id="taskId" />
+
+          <div class="row g-3">
+            <!-- TITLE -->
+            <div class="col-12">
+              <label class="form-label">
+                Task Title <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="text"
+                id="taskTitle"
+                class="form-control"
+                placeholder="e.g. Build client dashboard"
+                required
+              />
+            </div>
+
+            <!-- PROJECT -->
+            <div class="col-md-8">
+              <label class="form-label">
+                Project <span class="text-danger">*</span>
+              </label>
+
+              <select id="taskProject" class="form-select" required>
+                <option value="">Select project</option>
+              </select>
+            </div>
+
+            <!-- CLIENT -->
+            <div class="col-md-4">
+              <label class="form-label">Client</label>
+
+              <input
+                type="text"
+                id="taskClient"
+                class="form-control"
+                placeholder="Automatically assigned"
+                readonly
+              />
+            </div>
+
+            <!-- STATUS -->
+            <div class="col-md-4">
+              <label class="form-label">Status</label>
+
+              <select id="taskStatus" class="form-select">
+                <option value="Todo">Todo</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Review">Review</option>
+                <option value="Completed">Completed</option>
+                <option value="Blocked">Blocked</option>
+              </select>
+            </div>
+
+            <!-- PRIORITY -->
+            <div class="col-md-4">
+              <label class="form-label">Priority</label>
+
+              <select id="taskPriority" class="form-select">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <!-- DUE DATE -->
+            <div class="col-md-4">
+              <label class="form-label">Due Date</label>
+
+              <input type="date" id="taskDueDate" class="form-control" />
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="col-12">
+              <label class="form-label">Description</label>
+
+              <textarea
+                id="taskDescription"
+                class="form-control"
+                rows="4"
+                placeholder="Describe what needs to be completed..."
+              ></textarea>
+            </div>
+
+            <!-- NOTES -->
+            <div class="col-12">
+              <label class="form-label">Notes</label>
+
+              <textarea
+                id="taskNotes"
+                class="form-control"
+                rows="3"
+                placeholder="Additional notes..."
+              ></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="saveTaskBtn"
+          onclick="saveTask()"
+        >
+          <i class="bi bi-check-lg me-1"></i>
+          Save Task
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="csrfToken" value="<%= csrfToken %>" />
+
+<script>
+  let currentPage = 1;
+  const limit = 20;
+  let totalPages = 1;
+
+  let projects = [];
+
+  const taskModal = new bootstrap.Modal(document.getElementById("taskModal"));
+
+  // ================= LOAD PROJECTS =================
+
+  async function loadProjects() {
+    try {
+      const response = await fetch("/api/projects?limit=100");
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load projects.");
+      }
+
+      projects = result.data.projects || [];
+
+      populateProjectSelects();
+    } catch (error) {
+      console.error("Project loading error:", error);
+    }
+  }
+
+  function populateProjectSelects() {
+    const filter = document.getElementById("projectFilter");
+    const projectSelect = document.getElementById("taskProject");
+
+    filter.innerHTML = `
+      <option value="">All Projects</option>
+    `;
+
+    projectSelect.innerHTML = `
+      <option value="">Select project</option>
+    `;
+
+    projects.forEach((project) => {
+      const clientName = project.client?.companyName
+        ? ` — ${project.client.companyName}`
+        : "";
+
+      filter.innerHTML += `
+        <option value="${project._id}">
+          ${escapeHtml(project.name)}
+        </option>
+      `;
+
+      projectSelect.innerHTML += `
+        <option value="${project._id}">
+          ${escapeHtml(project.name)}${escapeHtml(clientName)}
+        </option>
+      `;
+    });
+  }
+
+  // ================= PROJECT → CLIENT =================
+
+  document
+    .getElementById("taskProject")
+    .addEventListener("change", function () {
+      const project = projects.find((item) => item._id === this.value);
+
+      document.getElementById("taskClient").value =
+        project?.client?.companyName || "";
+    });
+
+  // ================= LOAD TASKS =================
+
+  async function loadTasks() {
+    const search = document.getElementById("searchInput").value.trim();
+
+    const status = document.getElementById("statusFilter").value;
+
+    const priority = document.getElementById("priorityFilter").value;
+
+    const project = document.getElementById("projectFilter").value;
+
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit,
+      search,
+      status,
+      priority,
+      project,
+    });
+
+    const tbody = document.getElementById("tasksTableBody");
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-5 text-secondary">
+          <div class="spinner-border spinner-border-sm me-2"></div>
+          Loading tasks...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const response = await fetch(`/api/tasks?${params}`);
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load tasks.");
+      }
+
+      renderTasks(result.data);
+    } catch (error) {
+      console.error("Task loading error:", error);
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-5 text-danger">
+            ${escapeHtml(error.message)}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  // ================= RENDER TASKS =================
+
+  function renderTasks(data) {
+    const tbody = document.getElementById("tasksTableBody");
+
+    const tasks = data.tasks || [];
+
+    const pagination = data.pagination || {};
+
+    totalPages = pagination.totalPages || 1;
+
+    document.getElementById("taskCount").textContent =
+      `${pagination.total || 0} Task${pagination.total === 1 ? "" : "s"}`;
+
+    if (!tasks.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center py-5 text-secondary">
+            <i class="bi bi-check2-circle fs-3 d-block mb-2"></i>
+            No tasks found.
+          </td>
+        </tr>
+      `;
+    } else {
+      tbody.innerHTML = tasks
+        .map((task) => {
+          const dueDate = task.dueDate
+            ? new Date(task.dueDate).toLocaleDateString()
+            : "—";
+
+          const assigned = task.assignedTo?.name || "Unassigned";
+
+          return `
+          <tr>
+
+            <td>
+              <div class="fw-semibold">
+                ${escapeHtml(task.title)}
+              </div>
+
+              ${
+                task.description
+                  ? `<small class="text-secondary">
+                       ${escapeHtml(task.description.substring(0, 70))}
+                     </small>`
+                  : ""
+              }
+            </td>
+
+            <td>
+              ${escapeHtml(task.project?.name || "—")}
+            </td>
+
+            <td>
+              ${statusBadge(task.status)}
+            </td>
+
+            <td>
+              ${priorityBadge(task.priority)}
+            </td>
+
+            <td>
+              ${dueDate}
+            </td>
+
+            <td>
+              ${escapeHtml(assigned)}
+            </td>
+
+            <td class="text-end text-nowrap">
+
+              <button
+                class="btn btn-sm btn-primary me-1"
+                onclick='editTask(${JSON.stringify(task)})'
+              >
+                <i class="bi bi-pencil"></i>
+              </button>
+
+              <button
+                class="btn btn-sm btn-outline-danger"
+                onclick="deleteTask('${task._id}')"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+
+            </td>
+
+          </tr>
+        `;
+        })
+        .join("");
+    }
+
+    document.getElementById("paginationInfo").textContent =
+      `Page ${pagination.page || 1} of ${totalPages}`;
+
+    document.getElementById("previousBtn").disabled = currentPage <= 1;
+
+    document.getElementById("nextBtn").disabled = currentPage >= totalPages;
+  }
+
+  // ================= BADGES =================
+
+  function statusBadge(status) {
+    const classes = {
+      Todo: "bg-secondary-subtle text-secondary",
+      "In Progress": "bg-primary-subtle text-primary",
+      Review: "bg-warning-subtle text-warning",
+      Completed: "bg-success-subtle text-success",
+      Blocked: "bg-danger-subtle text-danger",
+    };
+
+    return `
+      <span class="badge ${classes[status] || "bg-secondary-subtle text-secondary"}">
+        ${escapeHtml(status || "Unknown")}
+      </span>
+    `;
+  }
+
+  function priorityBadge(priority) {
+    const classes = {
+      Low: "bg-secondary-subtle text-secondary",
+      Medium: "bg-primary-subtle text-primary",
+      High: "bg-warning-subtle text-warning",
+      Urgent: "bg-danger-subtle text-danger",
+    };
+
+    return `
+      <span class="badge ${classes[priority] || "bg-secondary-subtle text-secondary"}">
+        ${escapeHtml(priority || "Unknown")}
+      </span>
+    `;
+  }
+
+  // ================= NEW TASK =================
+
+  function openTaskModal() {
+    document.getElementById("modalTitle").textContent = "New Task";
+
+    document.getElementById("taskId").value = "";
+
+    document.getElementById("taskForm").reset();
+
+    document.getElementById("taskClient").value = "";
+
+    document.getElementById("taskStatus").value = "Todo";
+
+    document.getElementById("taskPriority").value = "Medium";
+
+    taskModal.show();
+  }
+
+  // ================= EDIT TASK =================
+
+  function editTask(task) {
+    document.getElementById("modalTitle").textContent = "Edit Task";
+
+    document.getElementById("taskId").value = task._id;
+
+    document.getElementById("taskTitle").value = task.title || "";
+
+    document.getElementById("taskProject").value =
+      task.project?._id || task.project || "";
+
+    document.getElementById("taskClient").value =
+      task.client?.companyName || "";
+
+    document.getElementById("taskStatus").value = task.status || "Todo";
+
+    document.getElementById("taskPriority").value = task.priority || "Medium";
+
+    document.getElementById("taskDueDate").value = task.dueDate
+      ? new Date(task.dueDate).toISOString().split("T")[0]
+      : "";
+
+    document.getElementById("taskDescription").value = task.description || "";
+
+    document.getElementById("taskNotes").value = task.notes || "";
+
+    taskModal.show();
+  }
+
+  // ================= SAVE TASK =================
+
+  async function saveTask() {
+    const id = document.getElementById("taskId").value;
+
+    const payload = {
+      title: document.getElementById("taskTitle").value.trim(),
+
+      project: document.getElementById("taskProject").value,
+
+      status: document.getElementById("taskStatus").value,
+
+      priority: document.getElementById("taskPriority").value,
+
+      dueDate: document.getElementById("taskDueDate").value || undefined,
+
+      description: document.getElementById("taskDescription").value.trim(),
+
+      notes: document.getElementById("taskNotes").value.trim(),
+    };
+
+    if (!payload.title || !payload.project) {
+      alert("Task title and project are required.");
+
+      return;
+    }
+
+    const button = document.getElementById("saveTaskBtn");
+
+    button.disabled = true;
+
+    button.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-1"></span>
+      Saving...
+    `;
+
+    try {
+      const response = await fetch(id ? `/api/tasks/${id}` : "/api/tasks", {
+        method: id ? "PATCH" : "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": document.getElementById("csrfToken").value,
+        },
+
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to save task.");
+      }
+
+      taskModal.hide();
+
+      await loadTasks();
+    } catch (error) {
+      console.error("Save task error:", error);
+
+      alert(error.message);
+    } finally {
+      button.disabled = false;
+
+      button.innerHTML = `
+        <i class="bi bi-check-lg me-1"></i>
+        Save Task
+      `;
+    }
+  }
+
+  // ================= DELETE TASK =================
+
+  async function deleteTask(id) {
+    if (!confirm("Delete this task?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/tasks/${id}`, {
+        method: "DELETE",
+
+        headers: {
+          "x-csrf-token": document.getElementById("csrfToken").value,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete task.");
+      }
+
+      await loadTasks();
+    } catch (error) {
+      console.error("Delete task error:", error);
+
+      alert(error.message);
+    }
+  }
+
+  // ================= PAGINATION =================
+
+  function previousPage() {
+    if (currentPage <= 1) return;
+
+    currentPage--;
+
+    loadTasks();
+  }
+
+  function nextPage() {
+    if (currentPage >= totalPages) return;
+
+    currentPage++;
+
+    loadTasks();
+  }
+
+  // ================= FILTER EVENTS =================
+
+  let searchTimer;
+
+  document.getElementById("searchInput").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(() => {
+      currentPage = 1;
+
+      loadTasks();
+    }, 350);
+  });
+
+  ["statusFilter", "priorityFilter", "projectFilter"].forEach((id) => {
+    document.getElementById(id).addEventListener("change", () => {
+      currentPage = 1;
+
+      loadTasks();
+    });
+  });
+
+  // ================= SECURITY =================
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // ================= INITIALIZE =================
+
+  (async function initTasksPage() {
+    await loadProjects();
+
+    await loadTasks();
+  })();
+</script>

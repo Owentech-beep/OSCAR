@@ -1,0 +1,728 @@
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+
+  <div class="brand">
+    <div class="brand-title">OSCAR</div>
+    <div class="brand-subtitle">AI Agency Assistant</div>
+
+    <!-- Desktop collapse -->
+    <button
+      type="button"
+      class="sidebar-toggle desktop-toggle"
+      id="desktopSidebarToggle"
+      aria-label="Collapse sidebar"
+    >
+      <i class="bi bi-chevron-left"></i>
+    </button>
+  </div>
+
+  <!-- Mobile close -->
+  <button
+    type="button"
+    class="sidebar-toggle mobile-toggle"
+    id="mobileSidebarClose"
+    aria-label="Close navigation"
+  >
+    <i class="bi bi-x-lg"></i>
+  </button>
+
+  <nav class="sidebar-nav">
+
+    <% const items = [
+      ["bi-grid-1x2-fill", "Dashboard", "/dashboard"],
+      ["bi-stars", "AI Assistant", "#"],
+      ["bi-person-lines-fill", "Leads", "/leads"],
+      ["bi-send", "Outreach", "#"],
+      ["bi-people", "Clients", "/clients"],
+      ["bi-kanban", "Projects", "#"],
+      ["bi-envelope", "Emails", "/emails"],
+      ["bi-calendar3", "Calendar", "#"],
+      ["bi-check2-square", "Tasks", "/tasks"],
+      ["bi-bar-chart-line", "Analytics", "#"],
+      ["bi-receipt", "Invoices", "#"],
+      ["bi-file-earmark-text", "Documents", "#"],
+      ["bi-gear", "Settings", "#"]
+    ]; %>
+
+    <% items.forEach(([icon, label, href]) => { %>
+
+      <a
+        href="<%= href %>"
+        class="sidebar-link <%= currentPath === href ? 'active' : '' %>"
+        title="<%= label %>"
+      >
+        <i class="bi <%= icon %>"></i>
+        <span><%= label %></span>
+      </a>
+
+    <% }) %>
+
+  </nav>
+
+  <div class="voice-panel">
+
+    <div class="small text-secondary">
+      OSCAR Voice
+    </div>
+
+    <div class="voice-status">
+      <span class="status-dot"></span>
+      Online
+    </div>
+
+    <button class="btn btn-oscar w-100 mt-3">
+      <i class="bi bi-mic-fill me-2"></i>
+      <span>Talk to OSCAR</span>
+    </button>
+
+  </div>
+
+</aside>
+
+<!-- Mobile overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <header class="topbar">
+      <button class="icon-btn d-lg-none" id="mobileMenuButton" type="button">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Search anything..."
+          aria-label="Search">
+        <kbd>Ctrl /</kbd>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="icon-btn"><i class="bi bi-bell"></i></button>
+        <button class="icon-btn"><i class="bi bi-gear"></i></button>
+        <div class="profile">
+          <div class="avatar"><%= user.name.slice(0, 1).toUpperCase() %></div>
+          <div class="d-none d-md-block">
+            <div class="profile-name"><%= user.name %></div>
+            <div class="profile-role"><%= user.role %></div>
+          </div>
+        </div>
+        <form action="/logout" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="icon-btn" title="Sign out"><i
+              class="bi bi-box-arrow-right"></i></button>
+        </form>
+      </div>
+    </header>
+
+    <section class="dashboard-content">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">OWENTECH COMMAND CENTER</p>
+          <h1>
+          <span id="timeGreeting">Good Evening</span>,
+          <%= user.name.split(" ")[0] %> 
+          </h1>
+          <p class="hero-text">
+            I'm OSCAR, your AI business assistant.<br>
+            How can I help you grow OwenTech today?
+          </p>
+
+          <div class="quick-actions">
+            <button class="btn btn-oscar"><i class="bi bi-search me-2"></i>Find
+              new leads</button>
+            <button class="btn btn-ghost"><i class="bi bi-send me-2"></i>Send
+              outreach emails</button>
+            <button class="btn btn-ghost"><i
+                class="bi bi-bar-chart-line me-2"></i>Show business
+              report</button>
+            <button class="btn btn-ghost"><i
+                class="bi bi-globe2 me-2"></i>Analyze website</button>
+          </div>
+        </div>
+
+        <!-- ================= OSCAR CORE ================= -->
+
+<div class="oscar-core">
+
+  <!-- ================= 3D OSCAR BRAIN ================= -->
+
+        <div class="oscar-brain">
+          <div
+            id="oscarBrain"
+            class="oscar-brain-stage"
+            aria-label="OSCAR AI Brain"
+          ></div>
+        </div>
+
+        <!-- ================= OSCAR CHAT ================= -->
+
+        <div class="chat-card glass-card">
+
+          <div class="chat-header d-flex justify-content-between align-items-center">
+
+            <span>Chat with OSCAR</span>
+
+            <span class="status-pill">
+              <span class="status-dot"></span>
+              Online
+            </span>
+
+          </div>
+
+          <div id="oscarMessages" class="oscar-messages">
+
+            <div class="chat-message oscar-message">
+
+              <strong>
+                We're connected, <%= user.name.split(" ")[0] %>. 👋
+              </strong>
+
+              <p class="mb-0 mt-2">
+                Ask me about your leads, clients, business data, or anything
+                you need help with.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div id="confirmationContainer"></div>
+
+          <form id="oscarChatForm" class="chat-input">
+
+            <input
+              id="oscarInput"
+              type="text"
+              class="form-control"
+              placeholder="Ask OSCAR anything..."
+              autocomplete="off"
+              required
+            />
+
+            <button
+              type="submit"
+              class="oscar-send-btn"
+              title="Send"
+            >
+              <i class="bi bi-send-fill"></i>
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+      <!-- ================= END OSCAR CORE ================= -->
+ </div>
+
+      <div class="kpi-grid">
+        <%- include("../partials/kpi", { icon: "bi-currency-dollar", label:
+        "Revenue", value: metrics.revenue.toLocaleString("en-ZA", { style:
+        "currency", currency: "ZAR" }), trend: "Database" }) %>
+        <%- include("../partials/kpi", { icon: "bi-people", label:
+        "Active Clients", value: metrics.activeClients, trend: "Database" })
+        %>
+        <%- include("../partials/kpi", { icon: "bi-bullseye", label:
+        "Potential Leads", value: metrics.potentialLeads, trend: "Database" })
+        %>
+        <%- include("../partials/kpi", { icon: "bi-send", label:
+        "Emails Sent",
+        value: metrics.emailsSent.toLocaleString(), trend: "Database" }) %>
+        <%- include("../partials/kpi", { icon: "bi-envelope-check", label:
+        "Responses", value: metrics.responses.toLocaleString(), trend:
+        "Database" }) %>
+        <%- include("../partials/kpi", { icon: "bi-graph-up-arrow", label:
+        "Conversion Rate", value: `${metrics.conversionRate.toFixed(1)}%`,
+        trend: "Database" }) %>
+      </div>
+
+      <div class="empty-grid">
+        <div class="dashboard-panel glass-card">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">PHASE 1</span>
+              <h2>Recent activity</h2>
+            </div>
+            <span class="badge-soft">Live foundation</span>
+          </div>
+          <div class="empty-state">
+            <i class="bi bi-database-check"></i>
+            <h3>Database-backed dashboard</h3>
+            <p>CRM records, activity, outreach and analytics will populate
+              this
+              workspace as each phase is implemented.</p>
+          </div>
+        </div>
+
+        <div class="dashboard-panel glass-card">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">OSCAR BRAIN</span>
+              <h2>Agent status</h2>
+            </div>
+            <span class="status-pill">Foundation ready</span>
+          </div>
+          <div class="agent-list">
+            <div><span>Authentication</span><strong>Ready</strong></div>
+            <div><span>MongoDB</span><strong>Connected</strong></div>
+            <div><span>Tool layer</span><strong>Phase 3</strong></div>
+            <div><span>MCP</span><strong>Phase 7</strong></div>
+            <div><span>Voice</span><strong>Phase 9</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+
+  function updateTimeGreeting() {
+    const greetingElement =
+      document.getElementById("timeGreeting");
+
+    if (!greetingElement) return;
+
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) {
+      greetingElement.textContent = "Good Morning";
+    } else if (hour >= 12 && hour < 18) {
+      greetingElement.textContent = "Good Afternoon";
+    } else {
+      greetingElement.textContent = "Good Evening";
+    }
+  }
+
+  updateTimeGreeting();
+
+  setInterval(updateTimeGreeting, 60 * 1000);
+
+// =========================================================
+// OSCAR SIDEBAR CONTROLS
+// =========================================================
+
+const oscarSidebar =
+  document.getElementById("sidebar");
+
+const desktopSidebarToggle =
+  document.getElementById("desktopSidebarToggle");
+
+const mobileSidebarClose =
+  document.getElementById("mobileSidebarClose");
+
+const sidebarOverlay =
+  document.getElementById("sidebarOverlay");
+
+// =========================================================
+// DESKTOP COLLAPSE
+// =========================================================
+
+desktopSidebarToggle?.addEventListener("click", () => {
+
+  oscarSidebar.classList.toggle("collapsed");
+
+  const isCollapsed =
+    oscarSidebar.classList.contains("collapsed");
+
+  localStorage.setItem(
+    "oscarSidebarCollapsed",
+    isCollapsed
+  );
+
+});
+
+
+// =========================================================
+// RESTORE DESKTOP SIDEBAR STATE
+// =========================================================
+
+if (
+  window.innerWidth > 800 &&
+  localStorage.getItem("oscarSidebarCollapsed") === "true"
+) {
+
+  oscarSidebar.classList.add("collapsed");
+
+}
+mobileMenuButton?.addEventListener("click", () => {
+
+  oscarSidebar.classList.add("mobile-open");
+
+  sidebarOverlay.classList.add("active");
+
+});
+// =========================================================
+// MOBILE CLOSE
+// =========================================================
+
+function closeMobileSidebar() {
+
+  oscarSidebar.classList.remove("mobile-open");
+
+  sidebarOverlay.classList.remove("active");
+
+}
+
+
+mobileSidebarClose?.addEventListener(
+  "click",
+  closeMobileSidebar
+);
+
+sidebarOverlay?.addEventListener(
+  "click",
+  closeMobileSidebar
+);
+
+
+// =========================================================
+// CLOSE AFTER NAVIGATION
+// =========================================================
+
+document
+  .querySelectorAll(".sidebar-link")
+  .forEach(link => {
+
+    link.addEventListener("click", () => {
+
+      if (window.innerWidth <= 800) {
+
+        closeMobileSidebar();
+
+      }
+
+    });
+
+  });
+
+
+// =========================================================
+// HANDLE RESIZE
+// =========================================================
+
+window.addEventListener("resize", () => {
+
+  if (window.innerWidth > 800) {
+
+    closeMobileSidebar();
+
+  }
+
+});
+</script>
+<script>
+  const oscarChatForm = document.getElementById("oscarChatForm");
+  const oscarInput = document.getElementById("oscarInput");
+  const oscarMessages = document.getElementById("oscarMessages");
+  const confirmationContainer = document.getElementById(
+    "confirmationContainer"
+  );
+
+  function addOscarMessage(message, type = "oscar") {
+    const messageElement = document.createElement("div");
+
+    messageElement.className =
+      type === "user"
+        ? "chat-message user-message"
+        : "chat-message oscar-message";
+
+    messageElement.textContent = message;
+
+    oscarMessages.appendChild(messageElement);
+    oscarMessages.scrollTop = oscarMessages.scrollHeight;
+  }
+
+ function showConfirmation(confirmation) {
+  confirmationContainer.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "confirmation-card";
+
+  const title = document.createElement("strong");
+  title.textContent = "Confirmation Required";
+
+  const description = document.createElement("p");
+  description.textContent =
+    confirmation.message || "OSCAR is requesting confirmation.";
+
+  const details = document.createElement("div");
+  details.className = "confirmation-details";
+
+  if (confirmation.details) {
+    Object.entries(confirmation.details).forEach(([key, value]) => {
+      if (!value) return;
+
+      const row = document.createElement("div");
+      row.className = "confirmation-detail-row";
+
+      const label = document.createElement("span");
+      label.className = "confirmation-detail-label";
+      label.textContent = formatConfirmationLabel(key);
+
+      const detailValue = document.createElement("span");
+      detailValue.className = "confirmation-detail-value";
+      detailValue.textContent = formatConfirmationValue(key, value);
+
+      row.appendChild(label);
+      row.appendChild(detailValue);
+
+      details.appendChild(row);
+    });
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "confirmation-actions";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "btn btn-ghost";
+  cancelButton.textContent = "Cancel";
+
+  const confirmButton = document.createElement("button");
+  confirmButton.type = "button";
+  confirmButton.className = "btn btn-oscar";
+  confirmButton.textContent = "Confirm";
+
+  // CANCEL
+  cancelButton.addEventListener("click", () => {
+    confirmationContainer.innerHTML = "";
+
+    addOscarMessage("Action cancelled.");
+  });
+
+  // CONFIRM
+  confirmButton.addEventListener("click", async () => {
+    confirmButton.disabled = true;
+    cancelButton.disabled = true;
+
+    confirmButton.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-1"></span>
+      Confirming...
+    `;
+
+    try {
+      const response = await fetch("/api/oscar/confirm", {
+        method: "POST",
+
+        credentials: "same-origin",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          confirmationId: confirmation.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || "Unable to confirm the action."
+        );
+      }
+
+      confirmationContainer.innerHTML = "";
+
+      const actionResult = result.data;
+
+    if (
+        actionResult.action === "send_email" &&
+        actionResult.email
+      ) {
+        addOscarMessage(
+          `Email sent successfully to ${actionResult.email.to}.`
+        );
+      } else if (
+        actionResult.action === "create_lead" &&
+        actionResult.lead
+      ) {
+        addOscarMessage(
+          `Lead created successfully for ${actionResult.lead.companyName}.`
+        );
+      } else if (
+        actionResult.action === "update_lead" &&
+        actionResult.lead
+      ) {
+        addOscarMessage(
+          `Lead updated successfully for ${actionResult.lead.companyName}.`
+        );
+      } else if (
+        actionResult.action === "delete_lead" &&
+        actionResult.deletedLead
+      ) {
+        addOscarMessage(
+          `Lead "${actionResult.deletedLead.companyName}" was deleted.`
+        );
+      } else if (
+        actionResult.action === "create_calendar_event" &&
+        actionResult.meeting
+      ) {
+        addOscarMessage(
+          `Meeting "${actionResult.meeting.title}" was created successfully.`
+        );
+      } else if (
+        actionResult.action === "update_calendar_event" &&
+        actionResult.meeting
+      ) {
+        addOscarMessage(
+          `Meeting "${actionResult.meeting.title}" was updated successfully.`
+        );
+      } else if (
+        actionResult.action === "delete_calendar_event" &&
+        actionResult.deletedMeeting
+      ) {
+        addOscarMessage(
+          `Meeting "${actionResult.deletedMeeting.title}" was deleted successfully.`
+        );
+      } else if (
+        actionResult.action === "create_client" &&
+        actionResult.client
+      ) {
+        addOscarMessage(
+          `Client "${actionResult.client.companyName}" was created successfully.`
+        );
+      } else {
+        addOscarMessage(
+          "The confirmed action was completed successfully."
+        );
+      }
+    } catch (error) {
+      console.error("Confirmation error:", error);
+
+      confirmationContainer.innerHTML = "";
+
+      addOscarMessage(
+        error.message || "The action could not be completed."
+      );
+    }
+  });
+
+  actions.appendChild(cancelButton);
+  actions.appendChild(confirmButton);
+
+  card.appendChild(title);
+  card.appendChild(description);
+
+  if (confirmation.details) {
+    card.appendChild(details);
+  }
+
+  card.appendChild(actions);
+
+  confirmationContainer.appendChild(card);
+}
+function formatConfirmationLabel(key) {
+  const labels = {
+    title: "Meeting",
+    startAt: "Starts",
+    endAt: "Ends",
+    meetingType: "Type",
+    location: "Location",
+    contactName: "Contact",
+    contactEmail: "Email",
+  };
+
+  return labels[key] || key;
+}
+
+function formatConfirmationValue(key, value) {
+  if (
+    (key === "startAt" || key === "endAt") &&
+    value
+  ) {
+    const date = new Date(value);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleString([], {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    }
+  }
+
+  return String(value);
+}
+
+  oscarChatForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const sendButton = oscarChatForm.querySelector(".oscar-send-btn");
+
+  const message = oscarInput.value.trim();
+
+  if (!message) {
+    return;
+  }
+
+  sendButton.disabled = true;
+
+  addOscarMessage(message, "user");
+
+  oscarInput.value = "";
+
+  const thinkingMessage = document.createElement("div");
+
+  thinkingMessage.className = "chat-message oscar-message";
+  thinkingMessage.id = "oscarThinking";
+  thinkingMessage.textContent = "OSCAR is thinking...";
+
+  oscarMessages.appendChild(thinkingMessage);
+  oscarMessages.scrollTop = oscarMessages.scrollHeight;
+
+  try {
+    const response = await fetch("/api/oscar/chat", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message,
+      }),
+    });
+
+    const result = await response.json();
+
+    document.getElementById("oscarThinking")?.remove();
+
+    if (response.status === 503) {
+      addOscarMessage(
+        "🟡 OSCAR AI is currently offline. Please add your OPENAI_API_KEY to activate AI capabilities."
+      );
+
+      return;
+    }
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "OSCAR could not process your request."
+      );
+    }
+
+    addOscarMessage(result.data.response);
+
+    if (result.data.confirmation) {
+      showConfirmation(result.data.confirmation);
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    document.getElementById("oscarThinking")?.remove();
+
+    addOscarMessage(
+      error.message || "Unable to connect to OSCAR."
+    );
+
+  } finally {
+    sendButton.disabled = false;
+
+    // If the request failed, return the brain to Ready.
+    if (oscarBrain?.classList.contains("brain-thinking")) {
+      
+    }
+  }
+});
+</script>

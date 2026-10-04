@@ -1,0 +1,712 @@
+<div class="container-fluid py-4">
+  <!-- Page Header -->
+  <div
+    class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4"
+  >
+    <div>
+      <p class="text-uppercase text-primary fw-semibold small mb-1">CRM</p>
+
+      <h1 class="h2 fw-bold text-white mb-1">Leads</h1>
+
+      <p class="text-secondary mb-0">
+        Manage, qualify and track your business opportunities.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" id="addLeadBtn">
+      <i class="bi bi-plus-lg me-2"></i>
+      Add Lead
+    </button>
+  </div>
+
+  <!-- Lead Controls -->
+  <div class="oscar-card mb-4">
+    <div class="row g-3">
+      <!-- Search -->
+      <div class="col-lg-6">
+        <label for="leadSearch" class="form-label text-secondary">
+          Search Leads
+        </label>
+
+        <div class="input-group">
+          <span
+            class="input-group-text bg-transparent border-secondary text-secondary"
+          >
+            <i class="bi bi-search"></i>
+          </span>
+
+          <input
+            type="text"
+            id="leadSearch"
+            class="form-control bg-transparent text-white border-secondary"
+            placeholder="Search company, contact or email..."
+          />
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="col-lg-3">
+        <label for="statusFilter" class="form-label text-secondary">
+          Status
+        </label>
+
+        <select
+          id="statusFilter"
+          class="form-select bg-transparent text-white border-secondary"
+        >
+          <option value>All statuses</option>
+          <option value="New">New</option>
+          <option value="Researching">Researching</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Interested">Interested</option>
+          <option value="Meeting">Meeting</option>
+          <option value="Proposal">Proposal</option>
+          <option value="Won">Won</option>
+          <option value="Lost">Lost</option>
+          <option value="No Response">No Response</option>
+        </select>
+      </div>
+
+      <!-- Sort -->
+      <div class="col-lg-3">
+        <label for="sortLeads" class="form-label text-secondary"> Sort </label>
+
+        <select
+          id="sortLeads"
+          class="form-select bg-transparent text-white border-secondary"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="scoreHigh">Highest score</option>
+          <option value="scoreLow">Lowest score</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leads Table -->
+  <div class="oscar-card">
+    <div class="table-responsive">
+      <table class="table table-dark table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Industry</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Last Contact</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="leadsTableBody">
+          <tr id="leadsLoading">
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <div class="spinner-border spinner-border-sm me-2"></div>
+
+              Loading leads...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      id="leadsPagination"
+      class="d-flex justify-content-between align-items-center mt-4"
+    ></div>
+
+    <!-- Empty State -->
+    <div id="leadsEmpty" class="text-center py-5 d-none">
+      <div class="mb-3">
+        <i class="bi bi-people fs-1 text-secondary"></i>
+      </div>
+
+      <h5 class="text-white">No leads yet</h5>
+
+      <p class="text-secondary mb-3">
+        Add your first lead to start building your pipeline.
+      </p>
+
+      <button class="btn btn-primary" id="emptyAddLeadBtn">
+        <i class="bi bi-plus-lg me-2"></i>
+        Add First Lead
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div
+  class="modal fade"
+  id="addLeadModal"
+  tabindex="-1"
+  aria-labelledby="addLeadModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content oscar-modal">
+      <div class="modal-header border-secondary">
+        <div>
+          <p class="text-primary text-uppercase small fw-semibold mb-1">CRM</p>
+
+          <h5 class="modal-title text-white" id="addLeadModalLabel">
+            Add New Lead
+          </h5>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <form id="addLeadForm">
+        <div class="modal-body">
+          <div id="leadFormAlert" class="alert d-none" role="alert"></div>
+
+          <!-- Company -->
+          <div class="mb-3">
+            <label for="companyName" class="form-label text-white">
+              Company Name <span class="text-danger">*</span>
+            </label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="companyName"
+              name="companyName"
+              placeholder="e.g. OwenTech Solutions"
+              required
+            />
+          </div>
+
+          <!-- Contact -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="contactName" class="form-label text-white">
+                Contact Name
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="contactName"
+                name="contactName"
+                placeholder="e.g. John Smith"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label for="industry" class="form-label text-white">
+                Industry
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="industry"
+                name="industry"
+                placeholder="e.g. Construction"
+              />
+            </div>
+          </div>
+
+          <!-- Contact Details -->
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label for="email" class="form-label text-white"> Email </label>
+
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                name="email"
+                placeholder="contact@company.com"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label for="phone" class="form-label text-white"> Phone </label>
+
+              <input
+                type="tel"
+                class="form-control"
+                id="phone"
+                name="phone"
+                placeholder="+27 ..."
+              />
+            </div>
+          </div>
+
+          <!-- Website / Location -->
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label for="website" class="form-label text-white">
+                Website
+              </label>
+
+              <input
+                type="url"
+                class="form-control"
+                id="website"
+                name="website"
+                placeholder="https://example.com"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label for="location" class="form-label text-white">
+                Location
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="location"
+                name="location"
+                placeholder="e.g. Johannesburg, Gauteng"
+              />
+            </div>
+          </div>
+
+          <!-- Source / Status -->
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <label for="source" class="form-label text-white">
+                Lead Source
+              </label>
+
+              <input
+                type="text"
+                class="form-control"
+                id="source"
+                name="source"
+                placeholder="e.g. Website, Referral, LinkedIn"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label for="status" class="form-label text-white"> Status </label>
+
+              <select class="form-select" id="status" name="status">
+                <option value="New" selected>New</option>
+                <option value="Researching">Researching</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Interested">Interested</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Proposal">Proposal</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+                <option value="No Response">No Response</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mt-3">
+            <label for="notes" class="form-label text-white"> Notes </label>
+
+            <textarea
+              class="form-control"
+              id="notes"
+              name="notes"
+              rows="4"
+              placeholder="Add notes about this lead..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer border-secondary">
+          <button
+            type="button"
+            class="btn btn-outline-light"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+
+          <button type="submit" class="btn btn-primary" id="saveLeadBtn">
+            <i class="bi bi-person-plus me-2"></i>
+            Save Lead
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  let leads = [];
+
+  let currentPage = 1;
+  let leadsPerPage = 10;
+
+  let searchTerm = "";
+  let statusFilter = "";
+  let sortOption = "newest";
+
+  let pagination = {
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+  };
+
+  async function loadLeads() {
+    const tableBody = document.getElementById("leadsTableBody");
+    const emptyState = document.getElementById("leadsEmpty");
+
+    try {
+      console.log("Loading leads...");
+
+      const params = new URLSearchParams();
+
+      params.set("page", currentPage);
+      params.set("limit", leadsPerPage);
+
+      if (searchTerm) {
+        params.set("search", searchTerm);
+      }
+
+      if (statusFilter) {
+        params.set("status", statusFilter);
+      }
+
+      if (sortOption) {
+        params.set("sort", sortOption);
+      }
+
+      const response = await fetch(`/api/leads?${params.toString()}`, {
+        method: "GET",
+        credentials: "same-origin",
+      });
+
+      console.log("API status:", response.status);
+
+      const result = await response.json();
+
+      console.log("API response:", result);
+      console.log("Pagination:", result.pagination);
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to load leads.");
+      }
+
+      leads = result.data || [];
+
+      pagination = result.pagination || {
+        page: 1,
+        limit: leadsPerPage,
+        total: leads.length,
+        totalPages: 1,
+      };
+
+      renderLeads();
+      renderPagination();
+    } catch (error) {
+      console.error("Lead loading error:", error);
+
+      tableBody.innerHTML = `
+      <tr>
+        <td colspan="8" class="text-center py-5 text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          Unable to load leads.
+          <div class="small mt-2">
+            ${error.message}
+          </div>
+        </td>
+      </tr>
+    `;
+
+      emptyState.classList.add("d-none");
+    }
+  }
+
+  function renderLeads() {
+    const tableBody = document.getElementById("leadsTableBody");
+    const emptyState = document.getElementById("leadsEmpty");
+
+    tableBody.innerHTML = "";
+
+    if (leads.length === 0) {
+      emptyState.classList.remove("d-none");
+      return;
+    }
+
+    emptyState.classList.add("d-none");
+
+    leads.forEach((lead) => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+      <td>
+        <div class="fw-semibold text-white">
+          ${lead.companyName || "—"}
+        </div>
+
+        <small class="text-secondary">
+          ${lead.location || ""}
+        </small>
+      </td>
+
+      <td class="text-white">
+        ${lead.contactName || "—"}
+      </td>
+
+      <td>
+        <a
+          href="mailto:${lead.email || ""}"
+          class="text-decoration-none text-info"
+        >
+          ${lead.email || "—"}
+        </a>
+      </td>
+
+      <td class="text-secondary">
+        ${lead.industry || "—"}
+      </td>
+
+      <td>
+        <span class="badge bg-primary-subtle text-primary">
+          ${lead.status || "New"}
+        </span>
+      </td>
+
+      <td>
+        <span class="fw-semibold text-white">
+          ${lead.leadScore ?? 0}
+        </span>
+      </td>
+
+      <td class="text-secondary">
+        ${
+          lead.lastContact
+            ? new Date(lead.lastContact).toLocaleDateString()
+            : "Never"
+        }
+      </td>
+
+      <td class="text-end">
+
+        <button
+          class="btn btn-sm btn-outline-light"
+          onclick="viewLead('${lead._id}')"
+        >
+          <i class="bi bi-eye"></i>
+        </button>
+
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          onclick="editLead('${lead._id}')"
+        >
+          <i class="bi bi-pencil"></i>
+        </button>
+
+      </td>
+    `;
+
+      tableBody.appendChild(row);
+    });
+  }
+
+  function renderPagination() {
+    const paginationContainer = document.getElementById("leadsPagination");
+
+    if (!paginationContainer) {
+      return;
+    }
+
+    const { page, totalPages, total } = pagination;
+
+    if (total === 0 || totalPages <= 1) {
+      paginationContainer.innerHTML = "";
+      return;
+    }
+
+    paginationContainer.innerHTML = `
+    <div class="text-secondary small">
+      Page ${page} of ${totalPages}
+      <span class="ms-2">(${total} leads)</span>
+    </div>
+
+    <div class="d-flex gap-2">
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-light"
+        id="previousPageBtn"
+        ${page <= 1 ? "disabled" : ""}
+      >
+        <i class="bi bi-chevron-left me-1"></i>
+        Previous
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-light"
+        id="nextPageBtn"
+        ${page >= totalPages ? "disabled" : ""}
+      >
+        Next
+        <i class="bi bi-chevron-right ms-1"></i>
+      </button>
+
+    </div>
+  `;
+
+    document.getElementById("previousPageBtn").addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadLeads();
+      }
+    });
+
+    document.getElementById("nextPageBtn").addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadLeads();
+      }
+    });
+  }
+
+  let searchTimeout;
+
+  document.getElementById("leadSearch").addEventListener("input", () => {
+    clearTimeout(searchTimeout);
+
+    searchTimeout = setTimeout(() => {
+      searchTerm = document.getElementById("leadSearch").value.trim();
+      currentPage = 1;
+      loadLeads();
+    }, 400);
+  });
+
+  document.getElementById("statusFilter").addEventListener("change", () => {
+    statusFilter = document.getElementById("statusFilter").value;
+    currentPage = 1;
+    loadLeads();
+  });
+
+  document.getElementById("sortLeads").addEventListener("change", () => {
+    sortOption = document.getElementById("sortLeads").value;
+    currentPage = 1;
+    loadLeads();
+  });
+
+  function viewLead(id) {
+    window.location.href = `/leads/${id}`;
+  }
+
+  function editLead(id) {
+    window.location.href = `/leads/${id}/edit`;
+  }
+
+  const addLeadModalElement = document.getElementById("addLeadModal");
+
+  const addLeadModal = new bootstrap.Modal(addLeadModalElement);
+
+  document.getElementById("addLeadBtn").addEventListener("click", () => {
+    document.getElementById("addLeadForm").reset();
+
+    document.getElementById("leadFormAlert").classList.add("d-none");
+
+    addLeadModal.show();
+  });
+
+  document.getElementById("emptyAddLeadBtn").addEventListener("click", () => {
+    document.getElementById("addLeadForm").reset();
+
+    document.getElementById("leadFormAlert").classList.add("d-none");
+
+    addLeadModal.show();
+  });
+
+  // ================================
+  // CREATE LEAD
+  // ================================
+
+  document
+    .getElementById("addLeadForm")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const form = event.target;
+      const saveButton = document.getElementById("saveLeadBtn");
+      const alertBox = document.getElementById("leadFormAlert");
+
+      const leadData = {
+        companyName: document.getElementById("companyName").value.trim(),
+        contactName: document.getElementById("contactName").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        website: document.getElementById("website").value.trim(),
+        industry: document.getElementById("industry").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        source: document.getElementById("source").value.trim(),
+        status: document.getElementById("status").value,
+        notes: document.getElementById("notes").value.trim(),
+      };
+
+      try {
+        saveButton.disabled = true;
+
+        saveButton.innerHTML = `
+        <span
+          class="spinner-border spinner-border-sm me-2"
+          aria-hidden="true"
+        ></span>
+        Saving...
+      `;
+
+        const response = await fetch("/api/leads", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(leadData),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Unable to create lead.");
+        }
+
+        // Add the newly-created lead to our local list
+        leads.unshift(result.data);
+
+        // Close modal
+        addLeadModal.hide();
+
+        // Refresh table
+        renderLeads();
+
+        // Reset form
+        form.reset();
+
+        console.log("Lead created:", result.data);
+      } catch (error) {
+        console.error("Create lead error:", error);
+
+        alertBox.className = "alert alert-danger";
+        alertBox.textContent = error.message;
+        alertBox.classList.remove("d-none");
+      } finally {
+        saveButton.disabled = false;
+
+        saveButton.innerHTML = `
+        <i class="bi bi-person-plus me-2"></i>
+        Save Lead
+      `;
+      }
+    });
+
+  loadLeads();
+</script>

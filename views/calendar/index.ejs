@@ -1,0 +1,1235 @@
+<div class="container-fluid py-4">
+  <!-- ================= HEADER ================= -->
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"
+  >
+    <div>
+      <span class="text-uppercase small fw-semibold text-primary">
+        OSCAR WORKSPACE
+      </span>
+
+      <h1 class="fw-bold mb-1">Calendar</h1>
+
+      <p class="text-secondary mb-0">
+        Manage meetings, consultations and follow-ups.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" onclick="openMeetingModal()">
+      <i class="bi bi-plus-lg me-1"></i>
+      New Meeting
+    </button>
+  </div>
+
+  <!-- ================= CONTROLS ================= -->
+
+  <div class="glass-card p-3 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-4">
+        <label class="form-label small"> Search </label>
+
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-search"></i>
+          </span>
+
+          <input
+            type="text"
+            id="searchInput"
+            class="form-control"
+            placeholder="Search meetings..."
+          />
+        </div>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small"> Status </label>
+
+        <select id="statusFilter" class="form-select">
+          <option value="">All Statuses</option>
+          <option value="Scheduled">Scheduled</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="No Show">No Show</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small"> Type </label>
+
+        <select id="typeFilter" class="form-select">
+          <option value="">All Types</option>
+          <option value="Discovery">Discovery</option>
+          <option value="Consultation">Consultation</option>
+          <option value="Follow-up">Follow-up</option>
+          <option value="Client Meeting">Client Meeting</option>
+          <option value="Internal">Internal</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small"> From </label>
+
+        <input type="date" id="fromFilter" class="form-control" />
+      </div>
+
+      <div class="col-md-4 col-lg-2">
+        <label class="form-label small"> To </label>
+
+        <input type="date" id="toFilter" class="form-control" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CALENDAR ================= -->
+
+  <div class="row g-4">
+    <!-- MAIN CALENDAR -->
+
+    <div class="col-xl-8">
+      <div class="glass-card">
+        <div
+          class="d-flex justify-content-between align-items-center p-4 border-bottom"
+        >
+          <div>
+            <h5 class="mb-1" id="calendarMonthTitle">Calendar</h5>
+
+            <p class="text-secondary small mb-0">
+              Upcoming meetings and events
+            </p>
+          </div>
+
+          <div class="btn-group">
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              onclick="previousMonth()"
+            >
+              <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              onclick="goToToday()"
+            >
+              Today
+            </button>
+
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              onclick="nextMonth()"
+            >
+              <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- WEEK DAYS -->
+
+        <div class="calendar-weekdays">
+          <div>Sun</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div>Sat</div>
+        </div>
+
+        <!-- DAYS -->
+
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+    </div>
+
+    <!-- UPCOMING -->
+
+    <div class="col-xl-4">
+      <div class="glass-card h-100">
+        <div class="p-4 border-bottom">
+          <h5 class="mb-1">Upcoming</h5>
+
+          <p class="text-secondary small mb-0">Your next meetings</p>
+        </div>
+
+        <div id="upcomingMeetings" class="p-3">
+          <div class="text-center text-secondary py-5">Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MEETING MODAL ================= -->
+
+<div class="modal fade" id="meetingModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="modalTitle">New Meeting</h5>
+
+          <small class="text-secondary">
+            Schedule a meeting or follow-up.
+          </small>
+        </div>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="meetingForm">
+          <input type="hidden" id="meetingId" />
+
+          <div class="row g-3">
+            <!-- TITLE -->
+
+            <div class="col-12">
+              <label class="form-label">
+                Meeting Title
+                <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="text"
+                id="meetingTitle"
+                class="form-control"
+                placeholder="e.g. Discovery Call"
+                required
+              />
+            </div>
+
+            <!-- CLIENT -->
+
+            <div class="col-md-6">
+              <label class="form-label"> Client </label>
+
+              <select id="meetingClient" class="form-select">
+                <option value="">No client</option>
+              </select>
+            </div>
+
+            <!-- PROJECT -->
+
+            <div class="col-md-6">
+              <label class="form-label"> Project </label>
+
+              <select id="meetingProject" class="form-select">
+                <option value="">No project</option>
+              </select>
+            </div>
+
+            <!-- CONTACT -->
+
+            <div class="col-md-6">
+              <label class="form-label"> Contact Name </label>
+
+              <input
+                type="text"
+                id="contactName"
+                class="form-control"
+                placeholder="Contact person"
+              />
+            </div>
+
+            <!-- CONTACT EMAIL -->
+
+            <div class="col-md-6">
+              <label class="form-label"> Contact Email </label>
+
+              <input
+                type="email"
+                id="contactEmail"
+                class="form-control"
+                placeholder="contact@example.com"
+              />
+            </div>
+
+            <!-- TYPE -->
+
+            <div class="col-md-4">
+              <label class="form-label"> Meeting Type </label>
+
+              <select id="meetingType" class="form-select">
+                <option value="Discovery">Discovery</option>
+
+                <option value="Consultation">Consultation</option>
+
+                <option value="Follow-up">Follow-up</option>
+
+                <option value="Client Meeting">Client Meeting</option>
+
+                <option value="Internal">Internal</option>
+
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <!-- STATUS -->
+
+            <div class="col-md-4">
+              <label class="form-label"> Status </label>
+
+              <select id="meetingStatus" class="form-select">
+                <option value="Scheduled">Scheduled</option>
+
+                <option value="Completed">Completed</option>
+
+                <option value="Cancelled">Cancelled</option>
+
+                <option value="No Show">No Show</option>
+              </select>
+            </div>
+
+            <!-- LOCATION -->
+
+            <div class="col-md-4">
+              <label class="form-label"> Location </label>
+
+              <input
+                type="text"
+                id="meetingLocation"
+                class="form-control"
+                placeholder="Zoom / Office / Online"
+              />
+            </div>
+
+            <!-- START -->
+
+            <div class="col-md-6">
+              <label class="form-label">
+                Start
+                <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="datetime-local"
+                id="startAt"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- END -->
+
+            <div class="col-md-6">
+              <label class="form-label">
+                End
+                <span class="text-danger">*</span>
+              </label>
+
+              <input
+                type="datetime-local"
+                id="endAt"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <!-- DESCRIPTION -->
+
+            <div class="col-12">
+              <label class="form-label"> Description </label>
+
+              <textarea
+                id="meetingDescription"
+                class="form-control"
+                rows="3"
+                placeholder="Meeting details..."
+              ></textarea>
+            </div>
+
+            <!-- NOTES -->
+
+            <div class="col-12">
+              <label class="form-label"> Notes </label>
+
+              <textarea
+                id="meetingNotes"
+                class="form-control"
+                rows="3"
+                placeholder="Additional notes..."
+              ></textarea>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-danger me-auto d-none"
+          id="deleteMeetingBtn"
+          onclick="deleteMeeting()"
+        >
+          <i class="bi bi-trash me-1"></i>
+          Delete Meeting
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="saveMeetingBtn"
+          onclick="saveMeeting()"
+        >
+          <i class="bi bi-check-lg me-1"></i>
+          Save Meeting
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="hidden" id="csrfToken" value="<%= csrfToken %>" />
+
+<style>
+  /* ================= CALENDAR ================= */
+
+  .calendar-weekdays,
+  .calendar-grid {
+    display: grid;
+
+    grid-template-columns: repeat(7, 1fr);
+  }
+
+  .calendar-weekdays {
+    border-bottom: 1px solid rgba(80, 121, 200, 0.1);
+  }
+
+  .calendar-weekdays div {
+    padding: 12px 8px;
+
+    text-align: center;
+
+    color: #718198;
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+  }
+
+  .calendar-day {
+    min-height: 105px;
+
+    padding: 8px;
+
+    border-right: 1px solid rgba(80, 121, 200, 0.08);
+
+    border-bottom: 1px solid rgba(80, 121, 200, 0.08);
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+  }
+
+  .calendar-day:hover {
+    background: rgba(30, 80, 160, 0.12);
+  }
+
+  .calendar-day.other-month {
+    opacity: 0.35;
+  }
+
+  .calendar-day.today {
+    background: rgba(20, 100, 240, 0.08);
+  }
+
+  .calendar-day-number {
+    width: 25px;
+    height: 25px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    color: #91a0b5;
+
+    font-size: 11px;
+
+    margin-bottom: 5px;
+  }
+
+  .calendar-day.today .calendar-day-number {
+    color: #fff;
+
+    background: #1684ff;
+  }
+
+  .calendar-event {
+    padding: 4px 6px;
+
+    margin-bottom: 4px;
+
+    border-radius: 5px;
+
+    background: rgba(20, 100, 240, 0.2);
+
+    border-left: 2px solid #1684ff;
+
+    color: #b9d7ff;
+
+    font-size: 9px;
+
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+  }
+
+  .upcoming-meeting {
+    padding: 12px;
+
+    margin-bottom: 8px;
+
+    border: 1px solid rgba(80, 121, 200, 0.1);
+
+    border-radius: 9px;
+
+    background: rgba(8, 19, 39, 0.55);
+
+    cursor: pointer;
+
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .upcoming-meeting:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(37, 126, 255, 0.35);
+  }
+
+  .upcoming-meeting-title {
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: #dbe7f8;
+  }
+
+  .upcoming-meeting-time {
+    margin-top: 4px;
+
+    color: #6f7f99;
+
+    font-size: 9px;
+  }
+
+  @media (max-width: 700px) {
+    .calendar-day {
+      min-height: 75px;
+
+      padding: 4px;
+    }
+
+    .calendar-event {
+      font-size: 7px;
+
+      padding: 3px;
+    }
+
+    .calendar-weekdays div {
+      font-size: 8px;
+    }
+  }
+</style>
+
+<script>
+  // =========================================================
+  // STATE
+  // =========================================================
+
+  let currentDate = new Date();
+
+  let meetings = [];
+
+  let clients = [];
+
+  let projects = [];
+
+  let totalPages = 1;
+
+  const meetingModal = new bootstrap.Modal(
+    document.getElementById("meetingModal"),
+  );
+
+  // =========================================================
+  // LOAD CLIENTS
+  // =========================================================
+
+  async function loadClients() {
+    try {
+      const response = await fetch("/api/clients?limit=100");
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load clients.");
+      }
+
+      clients = result.data.clients || [];
+
+      const select = document.getElementById("meetingClient");
+
+      select.innerHTML = `<option value="">No client</option>`;
+
+      clients.forEach((client) => {
+        select.innerHTML += `
+          <option value="${client._id}">
+            ${escapeHtml(client.companyName)}
+          </option>
+        `;
+      });
+    } catch (error) {
+      console.error("Client loading error:", error);
+    }
+  }
+
+  // =========================================================
+  // LOAD PROJECTS
+  // =========================================================
+
+  async function loadProjects() {
+    try {
+      const response = await fetch("/api/projects?limit=100");
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load projects.");
+      }
+
+      projects = result.data.projects || [];
+
+      const select = document.getElementById("meetingProject");
+
+      select.innerHTML = `<option value="">No project</option>`;
+
+      projects.forEach((project) => {
+        select.innerHTML += `
+          <option value="${project._id}">
+            ${escapeHtml(project.name)}
+          </option>
+        `;
+      });
+    } catch (error) {
+      console.error("Project loading error:", error);
+    }
+  }
+
+  // =========================================================
+  // LOAD MEETINGS
+  // =========================================================
+
+  async function loadMeetings() {
+    const year = currentDate.getFullYear();
+
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+
+    const lastDay = new Date(year, month + 1, 0, 23, 59, 59);
+
+    const from = formatDateForApi(firstDay);
+
+    const to = formatDateForApi(lastDay);
+
+    const params = new URLSearchParams({
+      limit: 100,
+      from,
+      to,
+    });
+
+    const search = document.getElementById("searchInput").value.trim();
+
+    const status = document.getElementById("statusFilter").value;
+
+    const meetingType = document.getElementById("typeFilter").value;
+
+    const filterFrom = document.getElementById("fromFilter").value;
+
+    const filterTo = document.getElementById("toFilter").value;
+
+    if (search) {
+      params.set("search", search);
+    }
+
+    if (status) {
+      params.set("status", status);
+    }
+
+    if (meetingType) {
+      params.set("meetingType", meetingType);
+    }
+
+    if (filterFrom) {
+      params.set("from", filterFrom);
+    }
+
+    if (filterTo) {
+      params.set("to", filterTo);
+    }
+
+    try {
+      const response = await fetch(`/api/meetings?${params}`);
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load meetings.");
+      }
+
+      meetings = result.data.meetings || [];
+
+      totalPages = result.data.pagination?.totalPages || 1;
+
+      renderCalendar();
+
+      renderUpcoming();
+    } catch (error) {
+      console.error("Meeting loading error:", error);
+    }
+  }
+
+  // =========================================================
+  // RENDER CALENDAR
+  // =========================================================
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+
+    const month = currentDate.getMonth();
+
+    document.getElementById("calendarMonthTitle").textContent =
+      currentDate.toLocaleDateString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+
+    const grid = document.getElementById("calendarGrid");
+
+    grid.innerHTML = "";
+
+    const firstWeekday = new Date(year, month, 1).getDay();
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const daysInPreviousMonth = new Date(year, month, 0).getDate();
+
+    const totalCells = Math.ceil((firstWeekday + daysInMonth) / 7) * 7;
+
+    for (let cell = 0; cell < totalCells; cell++) {
+      let dayNumber;
+
+      let cellDate;
+
+      let otherMonth = false;
+
+      if (cell < firstWeekday) {
+        dayNumber = daysInPreviousMonth - firstWeekday + cell + 1;
+
+        cellDate = new Date(year, month - 1, dayNumber);
+
+        otherMonth = true;
+      } else if (cell >= firstWeekday + daysInMonth) {
+        dayNumber = cell - (firstWeekday + daysInMonth) + 1;
+
+        cellDate = new Date(year, month + 1, dayNumber);
+
+        otherMonth = true;
+      } else {
+        dayNumber = cell - firstWeekday + 1;
+
+        cellDate = new Date(year, month, dayNumber);
+      }
+
+      const day = document.createElement("div");
+
+      day.className = "calendar-day" + (otherMonth ? " other-month" : "");
+
+      if (isToday(cellDate)) {
+        day.classList.add("today");
+      }
+
+      day.innerHTML = `
+
+        <div class="calendar-day-number">
+          ${dayNumber}
+        </div>
+
+      `;
+
+      const dayMeetings = meetings.filter((meeting) =>
+        isSameDate(new Date(meeting.startAt), cellDate),
+      );
+
+      dayMeetings.forEach((meeting) => {
+        const event = document.createElement("div");
+
+        event.className = "calendar-event";
+
+        event.textContent =
+          formatMeetingTime(meeting.startAt) + " " + meeting.title;
+
+        event.title = meeting.title;
+
+        event.addEventListener("click", (eventClick) => {
+          eventClick.stopPropagation();
+
+          editMeeting(meeting);
+        });
+
+        day.appendChild(event);
+      });
+
+      day.addEventListener("click", () => {
+        if (otherMonth) {
+          currentDate = new Date(cellDate);
+
+          loadMeetings();
+
+          return;
+        }
+
+        openMeetingModal(cellDate);
+      });
+
+      grid.appendChild(day);
+    }
+  }
+
+  // =========================================================
+  // UPCOMING MEETINGS
+  // =========================================================
+
+  function renderUpcoming() {
+    const container = document.getElementById("upcomingMeetings");
+
+    const upcoming = [...meetings]
+      .filter((meeting) => new Date(meeting.startAt) >= new Date())
+      .sort((a, b) => new Date(a.startAt) - new Date(b.startAt))
+      .slice(0, 8);
+
+    if (!upcoming.length) {
+      container.innerHTML = `
+        <div class="text-center text-secondary py-5">
+
+          <i class="bi bi-calendar-x fs-3 d-block mb-2"></i>
+
+          No upcoming meetings.
+
+        </div>
+      `;
+
+      return;
+    }
+
+    container.innerHTML = upcoming
+      .map(
+        (meeting) => `
+
+          <div
+            class="upcoming-meeting"
+            onclick='editMeeting(${JSON.stringify(meeting)})'
+          >
+
+            <div class="upcoming-meeting-title">
+
+              ${escapeHtml(meeting.title)}
+
+            </div>
+
+            <div class="upcoming-meeting-time">
+
+              <i class="bi bi-clock me-1"></i>
+
+              ${formatDateTime(meeting.startAt)}
+
+            </div>
+
+            ${
+              meeting.client?.companyName
+                ? `
+                  <div class="text-secondary mt-1"
+                       style="font-size:9px">
+
+                    <i class="bi bi-building me-1"></i>
+
+                    ${escapeHtml(meeting.client.companyName)}
+
+                  </div>
+                `
+                : ""
+            }
+
+          </div>
+
+        `,
+      )
+      .join("");
+  }
+
+  // =========================================================
+  // NEW MEETING
+  // =========================================================
+
+  function openMeetingModal(date = null) {
+    document.getElementById("modalTitle").textContent = "New Meeting";
+
+    document.getElementById("meetingId").value = "";
+
+    document.getElementById("meetingForm").reset();
+
+    document.getElementById("meetingType").value = "Discovery";
+
+    document.getElementById("meetingStatus").value = "Scheduled";
+
+    // Hide delete button for new meetings
+    document.getElementById("deleteMeetingBtn").classList.add("d-none");
+
+    if (date) {
+      const start = new Date(date);
+
+      start.setHours(9, 0, 0, 0);
+
+      const end = new Date(start);
+
+      end.setHours(10, 0, 0, 0);
+
+      document.getElementById("startAt").value = toDateTimeLocal(start);
+
+      document.getElementById("endAt").value = toDateTimeLocal(end);
+    }
+    meetingModal.show();
+  }
+
+  // =========================================================
+  // EDIT MEETING
+  // =========================================================
+
+  function editMeeting(meeting) {
+    document.getElementById("modalTitle").textContent = "Edit Meeting";
+
+    document.getElementById("meetingId").value = meeting._id;
+
+    document.getElementById("meetingTitle").value = meeting.title || "";
+
+    document.getElementById("meetingClient").value =
+      meeting.client?._id || meeting.client || "";
+
+    document.getElementById("meetingProject").value =
+      meeting.project?._id || meeting.project || "";
+
+    document.getElementById("contactName").value = meeting.contactName || "";
+
+    document.getElementById("contactEmail").value = meeting.contactEmail || "";
+
+    document.getElementById("meetingType").value =
+      meeting.meetingType || "Other";
+
+    document.getElementById("meetingStatus").value =
+      meeting.status || "Scheduled";
+
+    document.getElementById("meetingLocation").value = meeting.location || "";
+
+    document.getElementById("startAt").value = toDateTimeLocal(
+      new Date(meeting.startAt),
+    );
+
+    document.getElementById("endAt").value = toDateTimeLocal(
+      new Date(meeting.endAt),
+    );
+
+    document.getElementById("meetingDescription").value =
+      meeting.description || "";
+
+    document.getElementById("meetingNotes").value = meeting.notes || "";
+
+    // Show delete button when editing
+    document.getElementById("deleteMeetingBtn").classList.remove("d-none");
+
+    meetingModal.show();
+  }
+  // =========================================================
+  // SAVE MEETING
+  // =========================================================
+
+  async function saveMeeting() {
+    const id = document.getElementById("meetingId").value;
+
+    const payload = {
+      title: document.getElementById("meetingTitle").value.trim(),
+
+      client: document.getElementById("meetingClient").value || undefined,
+
+      project: document.getElementById("meetingProject").value || undefined,
+
+      contactName: document.getElementById("contactName").value.trim(),
+
+      contactEmail: document.getElementById("contactEmail").value.trim(),
+
+      meetingType: document.getElementById("meetingType").value,
+
+      status: document.getElementById("meetingStatus").value,
+
+      location: document.getElementById("meetingLocation").value.trim(),
+
+      startAt: document.getElementById("startAt").value,
+
+      endAt: document.getElementById("endAt").value,
+
+      description: document.getElementById("meetingDescription").value.trim(),
+
+      notes: document.getElementById("meetingNotes").value.trim(),
+    };
+
+    if (!payload.title || !payload.startAt || !payload.endAt) {
+      alert("Meeting title, start time and end time are required.");
+
+      return;
+    }
+
+    if (new Date(payload.endAt) <= new Date(payload.startAt)) {
+      alert("End time must be after the start time.");
+
+      return;
+    }
+
+    const button = document.getElementById("saveMeetingBtn");
+
+    button.disabled = true;
+
+    button.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-1"></span>
+      Saving...
+    `;
+
+    try {
+      const response = await fetch(
+        id ? `/api/meetings/${id}` : "/api/meetings",
+        {
+          method: id ? "PATCH" : "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+
+            "x-csrf-token": document.getElementById("csrfToken").value,
+          },
+
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to save meeting.");
+      }
+
+      meetingModal.hide();
+
+      await loadMeetings();
+    } catch (error) {
+      console.error("Save meeting error:", error);
+
+      alert(error.message);
+    } finally {
+      button.disabled = false;
+
+      button.innerHTML = `
+        <i class="bi bi-check-lg me-1"></i>
+        Save Meeting
+      `;
+    }
+  }
+
+  // =========================================================
+  // DELETE MEETING
+  // =========================================================
+
+  async function deleteMeeting() {
+    const id = document.getElementById("meetingId").value;
+
+    if (!id) {
+      alert("No meeting selected.");
+      return;
+    }
+
+    const confirmed = confirm("Are you sure you want to delete this meeting?");
+
+    if (!confirmed) {
+      return;
+    }
+
+    const button = document.getElementById("deleteMeetingBtn");
+
+    button.disabled = true;
+
+    button.innerHTML = `
+    <span class="spinner-border spinner-border-sm me-1"></span>
+    Deleting...
+  `;
+
+    try {
+      const response = await fetch(`/api/meetings/${id}`, {
+        method: "DELETE",
+
+        headers: {
+          "x-csrf-token": document.getElementById("csrfToken").value,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to delete meeting.");
+      }
+
+      meetingModal.hide();
+
+      await loadMeetings();
+    } catch (error) {
+      console.error("Delete meeting error:", error);
+
+      alert(error.message);
+    } finally {
+      button.disabled = false;
+
+      button.innerHTML = `
+      <i class="bi bi-trash me-1"></i>
+      Delete Meeting
+    `;
+    }
+  }
+  // =========================================================
+  // MONTH NAVIGATION
+  // =========================================================
+
+  function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+
+    loadMeetings();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+
+    loadMeetings();
+  }
+
+  function goToToday() {
+    currentDate = new Date();
+
+    loadMeetings();
+  }
+
+  // =========================================================
+  // FILTERS
+  // =========================================================
+
+  ["statusFilter", "typeFilter", "fromFilter", "toFilter"].forEach((id) => {
+    document.getElementById(id).addEventListener("change", () => {
+      loadMeetings();
+    });
+  });
+
+  let searchTimer;
+
+  document.getElementById("searchInput").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+
+    searchTimer = setTimeout(loadMeetings, 350);
+  });
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  function isSameDate(first, second) {
+    return (
+      first.getFullYear() === second.getFullYear() &&
+      first.getMonth() === second.getMonth() &&
+      first.getDate() === second.getDate()
+    );
+  }
+
+  function isToday(date) {
+    return isSameDate(date, new Date());
+  }
+
+  function formatMeetingTime(date) {
+    return new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function formatDateTime(date) {
+    return new Date(date).toLocaleString([], {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function toDateTimeLocal(date) {
+    const year = date.getFullYear();
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    const day = String(date.getDate()).padStart(2, "0");
+
+    const hours = String(date.getHours()).padStart(2, "0");
+
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  function formatDateForApi(date) {
+    const year = date.getFullYear();
+
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // =========================================================
+  // INITIALIZE
+  // =========================================================
+
+  (async function initCalendar() {
+    await Promise.all([loadClients(), loadProjects()]);
+
+    await loadMeetings();
+  })();
+</script>

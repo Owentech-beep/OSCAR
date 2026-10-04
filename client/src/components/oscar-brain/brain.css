@@ -1,0 +1,25 @@
+.oscar-brain-3d {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.oscar-brain-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 991.98px) {
+  .oscar-brain-3d {
+    height: 360px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .oscar-brain-3d {
+    height: 300px;
+  }
+}

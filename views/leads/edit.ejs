@@ -1,0 +1,310 @@
+<div class="container-fluid py-4">
+    <!-- Back -->
+    <div class="mb-4">
+        <a href="/leads" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left me-2"></i>
+            Back to Leads
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-4">
+        <p class="text-uppercase text-primary fw-bold mb-1">Lead Management</p>
+
+        <h1 class="fw-bold text-white mb-1">Edit Lead</h1>
+
+        <p class="text-secondary mb-0">Update the information for this lead.</p>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-body p-4">
+            <div id="alertBox" class="alert d-none"></div>
+
+            <form id="editLeadForm">
+                <div class="row g-4">
+                    <!-- Company -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Company Name *
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="companyName"
+                            required />
+                    </div>
+
+                    <!-- Contact -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Contact Name
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="contactName" />
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Email </label>
+
+                        <input
+                            type="email"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="email" />
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Phone </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="phone" />
+                    </div>
+
+                    <!-- Website -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Website </label>
+
+                        <input
+                            type="url"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="website"
+                            placeholder="https://example.com" />
+                    </div>
+
+                    <!-- Industry -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Industry </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="industry" />
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Location </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="location" />
+                    </div>
+
+                    <!-- Source -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Lead Source
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="source" />
+                    </div>
+
+                    <!-- Status -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Status </label>
+
+                        <select
+                            class="form-select bg-dark text-white border-secondary"
+                            id="status">
+                            <option value="New">New</option>
+                            <option value="Researching">Researching</option>
+                            <option value="Qualified">Qualified</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Interested">Interested</option>
+                            <option value="Meeting">Meeting</option>
+                            <option value="Proposal">Proposal</option>
+                            <option value="Won">Won</option>
+                            <option value="Lost">Lost</option>
+                            <option value="No Response">No Response</option>
+                        </select>
+                    </div>
+
+                    <!-- Lead Score -->
+                    <div class="col-md-6">
+                        <label class="form-label text-white"> Lead Score
+                        </label>
+
+                        <input
+                            type="number"
+                            class="form-control bg-dark text-white border-secondary"
+                            id="leadScore"
+                            min="0"
+                            max="100" />
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="col-12">
+                        <label class="form-label text-white"> Notes </label>
+
+                        <textarea
+                            class="form-control bg-dark text-white border-secondary"
+                            id="notes"
+                            rows="5"></textarea>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-12">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="/leads" class="btn btn-outline-light">
+                                Cancel </a>
+
+                            <button type="submit" class="btn btn-primary"
+                                id="saveBtn">
+                                <i class="bi bi-check-lg me-2"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+  const leadId = "<%= leadId %>";
+
+  const form = document.getElementById("editLeadForm");
+  const alertBox = document.getElementById("alertBox");
+  const saveBtn = document.getElementById("saveBtn");
+
+  // -----------------------------
+  // Load Lead
+  // -----------------------------
+
+  async function loadLead() {
+    try {
+      const response = await fetch(`/api/leads/${leadId}`);
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to load lead");
+      }
+
+      const lead = result.data;
+
+      document.getElementById("companyName").value = lead.companyName || "";
+
+      document.getElementById("contactName").value = lead.contactName || "";
+
+      document.getElementById("email").value = lead.email || "";
+
+      document.getElementById("phone").value = lead.phone || "";
+
+      document.getElementById("website").value = lead.website || "";
+
+      document.getElementById("industry").value = lead.industry || "";
+
+      document.getElementById("location").value = lead.location || "";
+
+      document.getElementById("source").value = lead.source || "";
+
+      document.getElementById("status").value = lead.status || "New";
+
+      document.getElementById("leadScore").value = lead.leadScore ?? 0;
+
+      document.getElementById("notes").value = lead.notes || "";
+    } catch (error) {
+      console.error("Error loading lead:", error);
+
+      showAlert("Unable to load this lead.", "danger");
+    }
+  }
+
+  // -----------------------------
+  // Update Lead
+  // -----------------------------
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    saveBtn.disabled = true;
+
+    saveBtn.innerHTML = `
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Saving...
+    `;
+
+    const updatedLead = {
+      companyName: document.getElementById("companyName").value.trim(),
+
+      contactName: document.getElementById("contactName").value.trim(),
+
+      email: document.getElementById("email").value.trim(),
+
+      phone: document.getElementById("phone").value.trim(),
+
+      website: document.getElementById("website").value.trim(),
+
+      industry: document.getElementById("industry").value.trim(),
+
+      location: document.getElementById("location").value.trim(),
+
+      source: document.getElementById("source").value.trim(),
+
+      status: document.getElementById("status").value,
+
+      leadScore: Number(document.getElementById("leadScore").value),
+
+      notes: document.getElementById("notes").value.trim(),
+    };
+
+    try {
+      const response = await fetch(`/api/leads/${leadId}`, {
+        method: "PATCH",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(updatedLead),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to update lead");
+      }
+
+      showAlert("Lead updated successfully.", "success");
+
+      setTimeout(() => {
+        window.location.href = `/leads/${leadId}`;
+      }, 800);
+    } catch (error) {
+      console.error("Error updating lead:", error);
+
+      showAlert(error.message || "Something went wrong.", "danger");
+    } finally {
+      saveBtn.disabled = false;
+
+      saveBtn.innerHTML = `
+        <i class="bi bi-check-lg me-2"></i>
+        Save Changes
+      `;
+    }
+  });
+
+  // -----------------------------
+  // Alert
+  // -----------------------------
+
+  function showAlert(message, type) {
+    alertBox.className = `alert alert-${type}`;
+
+    alertBox.textContent = message;
+  }
+
+  // Load the lead when page opens
+  loadLead();
+</script>

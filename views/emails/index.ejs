@@ -1,0 +1,365 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Emails</h1>
+      <p class="text-muted mb-0">
+        Manage OSCAR's generated outreach and email activity.
+      </p>
+    </div>
+
+    <button class="btn btn-primary" id="refreshEmails">
+      <i class="bi bi-arrow-clockwise me-2"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="glass-card p-3 mb-4">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Status</label>
+
+        <select class="form-select" id="emailStatus">
+          <option value>All Emails</option>
+          <option value="draft">Drafts</option>
+          <option value="pending_confirmation">Pending Confirmation</option>
+          <option value="sent">Sent</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email table -->
+  <div class="glass-card p-4">
+    <div class="table-responsive">
+      <table class="table align-middle" id="emailsTable">
+        <thead>
+          <tr>
+            <th>Recipient</th>
+            <th>Company</th>
+            <th>Subject</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="emailsTableBody">
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">
+              Loading emails...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div
+        id="emailPagination"
+        class="d-flex justify-content-between align-items-center mt-4"
+      >
+        <button
+          type="button"
+          class="btn btn-outline-light"
+          id="previousEmailPage"
+        >
+          <i class="bi bi-chevron-left me-1"></i>
+          Previous
+        </button>
+
+        <span id="emailPaginationInfo" class="text-muted"> Page 1 </span>
+
+        <button type="button" class="btn btn-outline-light" id="nextEmailPage">
+          Next
+          <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-envelope-open me-2"></i>
+          Email Preview
+        </h5>
+
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <small class="text-muted d-block">Recipient</small>
+            <div id="emailPreviewTo" class="fw-semibold"></div>
+          </div>
+
+          <div class="col-md-6">
+            <small class="text-muted d-block">Company</small>
+            <div id="emailPreviewCompany" class="fw-semibold"></div>
+          </div>
+
+          <div class="col-md-6">
+            <small class="text-muted d-block">Status</small>
+            <div id="emailPreviewStatus"></div>
+          </div>
+
+          <div class="col-md-6">
+            <small class="text-muted d-block">Created</small>
+            <div id="emailPreviewDate"></div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="mb-4">
+          <small class="text-muted d-block mb-1">Subject</small>
+
+          <div id="emailPreviewSubject" class="fw-semibold fs-5"></div>
+        </div>
+
+        <div>
+          <small class="text-muted d-block mb-2"> Message </small>
+
+          <div
+            id="emailPreviewBody"
+            class="p-3 rounded"
+            style="white-space: pre-wrap"
+          ></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          data-bs-dismiss="modal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const emailsTableBody = document.getElementById("emailsTableBody");
+  const emailStatus = document.getElementById("emailStatus");
+  const refreshEmails = document.getElementById("refreshEmails");
+  const previousEmailPage = document.getElementById("previousEmailPage");
+  const nextEmailPage = document.getElementById("nextEmailPage");
+  const emailPaginationInfo = document.getElementById("emailPaginationInfo");
+
+  let currentEmailPage = 1;
+
+  async function loadEmails() {
+    emailsTableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-5 text-muted">
+          Loading emails...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const status = emailStatus.value;
+
+      const params = new URLSearchParams();
+
+      params.set("page", currentEmailPage);
+      params.set("limit", 20);
+
+      if (status) {
+        params.set("status", status);
+      }
+      const query = params.toString();
+
+      const response = await fetch(`/api/emails${query ? `?${query}` : ""}`, {
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to load emails.");
+      }
+
+      renderEmails(result.data.emails, result.data.pagination);
+      updateEmailPagination(result.data.pagination);
+
+      function updateEmailPagination(pagination) {
+        if (!pagination) {
+          return;
+        }
+
+        const { page, totalPages, total } = pagination;
+
+        currentEmailPage = page;
+
+        const displayTotalPages = Math.max(totalPages, 1);
+
+        emailPaginationInfo.textContent = `Page ${page} of ${displayTotalPages} · ${total} email${
+          total === 1 ? "" : "s"
+        }`;
+
+        previousEmailPage.disabled = page <= 1;
+        nextEmailPage.disabled = page >= displayTotalPages;
+      }
+    } catch (error) {
+      emailsTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-5 text-danger">
+            ${escapeHtml(error.message)}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  function renderEmails(emails, pagination) {
+    if (!emails.length) {
+      emailsTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+            No emails found.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    emailsTableBody.innerHTML = emails
+      .map(
+        (email) => `
+      <tr>
+        <td>
+          <div class="fw-semibold">
+            ${escapeHtml(email.to)}
+          </div>
+        </td>
+
+        <td>
+          ${escapeHtml(email.lead?.companyName || "—")}
+        </td>
+
+        <td>
+          ${escapeHtml(email.subject)}
+        </td>
+
+        <td>
+          <span class="badge bg-${getStatusClass(email.status)}">
+            ${escapeHtml(email.status)}
+          </span>
+        </td>
+
+        <td>
+          ${formatDate(email.createdAt)}
+        </td>
+
+        <td class="text-end">
+          <button
+            class="btn btn-sm btn-outline-light"
+            onclick="viewEmail('${email._id}')"
+          >
+            <i class="bi bi-eye"></i>
+          </button>
+        </td>
+      </tr>
+    `,
+      )
+      .join("");
+  }
+
+  function getStatusClass(status) {
+    const classes = {
+      draft: "secondary",
+      pending_confirmation: "warning",
+      sent: "success",
+      failed: "danger",
+    };
+
+    return classes[status] || "secondary";
+  }
+
+  function formatDate(date) {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleString();
+  }
+
+  function escapeHtml(value) {
+    const div = document.createElement("div");
+    div.textContent = value ?? "";
+    return div.innerHTML;
+  }
+
+  async function viewEmail(emailId) {
+    try {
+      const response = await fetch(`/api/emails/${emailId}`, {
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to load email.");
+      }
+
+      const email = result.data;
+
+      document.getElementById("emailPreviewTo").textContent = email.to;
+      document.getElementById("emailPreviewCompany").textContent =
+        email.lead?.companyName || "—";
+
+      document.getElementById("emailPreviewSubject").textContent =
+        email.subject;
+
+      document.getElementById("emailPreviewBody").textContent = email.body;
+
+      document.getElementById("emailPreviewStatus").textContent = email.status;
+
+      document.getElementById("emailPreviewDate").textContent = formatDate(
+        email.createdAt,
+      );
+
+      const modal = new bootstrap.Modal(
+        document.getElementById("emailPreviewModal"),
+      );
+
+      modal.show();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  emailStatus.addEventListener("change", () => {
+    currentEmailPage = 1;
+    loadEmails();
+  });
+  refreshEmails.addEventListener("click", loadEmails);
+
+  previousEmailPage.addEventListener("click", () => {
+    if (currentEmailPage <= 1) {
+      return;
+    }
+
+    currentEmailPage -= 1;
+    loadEmails();
+  });
+
+  nextEmailPage.addEventListener("click", () => {
+    currentEmailPage += 1;
+    loadEmails();
+  });
+
+  loadEmails();
+</script>

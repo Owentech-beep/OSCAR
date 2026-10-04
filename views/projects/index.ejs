@@ -1,0 +1,768 @@
+<input
+  type="hidden"
+  id="csrfToken"
+  value="<%= csrfToken %>"
+>
+<div class="container-fluid py-4">
+  <div
+    class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"
+  >
+    <div>
+      <h1 class="h3 mb-1">Projects</h1>
+      <p class="text-muted mb-0">
+        Manage client projects, priorities, deadlines and delivery status.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="btn btn-primary"
+      data-bs-toggle="modal"
+      data-bs-target="#projectModal"
+      onclick="openCreateProjectModal()"
+    >
+      <i class="bi bi-plus-lg me-2"></i>
+      Add Project
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <label for="projectSearch" class="form-label"> Search </label>
+
+          <input
+            type="search"
+            id="projectSearch"
+            class="form-control"
+            placeholder="Search projects..."
+          />
+        </div>
+
+        <div class="col-lg-3">
+          <label for="projectStatus" class="form-label"> Status </label>
+
+          <select id="projectStatus" class="form-select">
+            <option value>All statuses</option>
+            <option value="Planning">Planning</option>
+            <option value="Active">Active</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3">
+          <label for="projectClientFilter" class="form-label"> Client </label>
+
+          <select id="projectClientFilter" class="form-select">
+            <option value>All clients</option>
+          </select>
+        </div>
+
+        <div class="col-lg-1 d-flex align-items-end">
+          <button
+            type="button"
+            class="btn btn-outline-light w-100"
+            id="refreshProjects"
+            title="Refresh"
+          >
+            <i class="bi bi-arrow-clockwise"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects table -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Client</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Due Date</th>
+              <th>Created</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+
+          <tbody id="projectsTableBody">
+            <tr>
+              <td colspan="7" class="text-center text-muted py-5">
+                Loading projects...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <button
+          type="button"
+          class="btn btn-outline-light"
+          id="previousProjectPage"
+        >
+          <i class="bi bi-chevron-left me-1"></i>
+          Previous
+        </button>
+
+        <span id="projectPaginationInfo" class="text-muted"> Page 1 </span>
+
+        <button
+          type="button"
+          class="btn btn-outline-light"
+          id="nextProjectPage"
+        >
+          Next
+          <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal fade" id="projectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="projectModalTitle">Add Project</h5>
+
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <form id="projectForm">
+        <div class="modal-body">
+          <input type="hidden" id="projectId" />
+
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label for="projectName" class="form-label">
+                Project Name *
+              </label>
+
+              <input
+                type="text"
+                id="projectName"
+                class="form-control"
+                required
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label for="projectClient" class="form-label"> Client * </label>
+
+              <select id="projectClient" class="form-select" required>
+                <option value>Select client</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="projectStatusInput" class="form-label">
+                Status
+              </label>
+
+              <select id="projectStatusInput" class="form-select">
+                <option value="Planning">Planning</option>
+                <option value="Active">Active</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="projectPriority" class="form-label"> Priority </label>
+
+              <select id="projectPriority" class="form-select">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+                <option value="Urgent">Urgent</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="projectStartDate" class="form-label">
+                Start Date
+              </label>
+
+              <input type="date" id="projectStartDate" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="projectDueDate" class="form-label"> Due Date </label>
+
+              <input type="date" id="projectDueDate" class="form-control" />
+            </div>
+
+            <div class="col-md-6">
+              <label for="projectBudget" class="form-label">
+                Budget (ZAR)
+              </label>
+
+              <input
+                type="number"
+                id="projectBudget"
+                class="form-control"
+                min="0"
+                step="0.01"
+                value="0"
+              />
+            </div>
+
+            <div class="col-12">
+              <label for="projectDescription" class="form-label">
+                Description
+              </label>
+
+              <textarea
+                id="projectDescription"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div class="col-12">
+              <label for="projectNotes" class="form-label"> Notes </label>
+
+              <textarea
+                id="projectNotes"
+                class="form-control"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-outline-light"
+            data-bs-dismiss="modal"
+          >
+            Cancel
+          </button>
+
+          <button type="submit" class="btn btn-primary" id="saveProjectButton">
+            Save Project
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const projectsTableBody = document.getElementById("projectsTableBody");
+
+  const projectSearch = document.getElementById("projectSearch");
+
+  const projectStatus = document.getElementById("projectStatus");
+
+  const projectClientFilter = document.getElementById("projectClientFilter");
+
+  const refreshProjects = document.getElementById("refreshProjects");
+
+  const previousProjectPage = document.getElementById("previousProjectPage");
+
+  const nextProjectPage = document.getElementById("nextProjectPage");
+
+  const projectPaginationInfo = document.getElementById(
+    "projectPaginationInfo",
+  );
+
+  const projectForm = document.getElementById("projectForm");
+
+  const projectModal = document.getElementById("projectModal");
+
+  const csrfToken = document.getElementById("csrfToken")?.value;
+
+  let currentProjectPage = 1;
+  let projectModalInstance = null;
+
+  function getProjectModal() {
+    if (!projectModalInstance) {
+      projectModalInstance = bootstrap.Modal.getOrCreateInstance(projectModal);
+    }
+
+    return projectModalInstance;
+  }
+
+  function openCreateProjectModal() {
+    projectForm.reset();
+
+    document.getElementById("projectId").value = "";
+
+    document.getElementById("projectModalTitle").textContent = "Add Project";
+
+    document.getElementById("saveProjectButton").textContent = "Save Project";
+
+    document.getElementById("projectStatusInput").value = "Planning";
+
+    document.getElementById("projectPriority").value = "Medium";
+
+    document.getElementById("projectBudget").value = "0";
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatDate(date) {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleDateString("en-ZA", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
+  function statusBadge(status) {
+    const classes = {
+      Planning: "text-bg-secondary",
+      Active: "text-bg-success",
+      "On Hold": "text-bg-warning",
+      Completed: "text-bg-primary",
+      Cancelled: "text-bg-danger",
+    };
+
+    return `
+      <span class="badge ${classes[status] || "text-bg-secondary"}">
+        ${escapeHtml(status || "Unknown")}
+      </span>
+    `;
+  }
+
+  function priorityBadge(priority) {
+    const classes = {
+      Low: "text-bg-secondary",
+      Medium: "text-bg-info",
+      High: "text-bg-warning",
+      Urgent: "text-bg-danger",
+    };
+
+    return `
+      <span class="badge ${classes[priority] || "text-bg-secondary"}">
+        ${escapeHtml(priority || "Medium")}
+      </span>
+    `;
+  }
+
+  function renderProjects(projects) {
+    if (!projects.length) {
+      projectsTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            class="text-center text-muted py-5"
+          >
+            No projects found.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    projectsTableBody.innerHTML = projects
+      .map(
+        (project) => `
+        <tr>
+
+          <td>
+            <strong>
+              ${escapeHtml(project.name)}
+            </strong>
+
+            ${
+              project.description
+                ? `
+                  <div class="small text-muted mt-1">
+                    ${escapeHtml(project.description)}
+                  </div>
+                `
+                : ""
+            }
+          </td>
+
+          <td>
+            ${escapeHtml(project.client?.companyName || "—")}
+          </td>
+
+          <td>
+            ${statusBadge(project.status)}
+          </td>
+
+          <td>
+            ${priorityBadge(project.priority)}
+          </td>
+
+          <td>
+            ${formatDate(project.dueDate)}
+          </td>
+
+          <td>
+            ${formatDate(project.createdAt)}
+          </td>
+
+          <td class="text-end">
+
+            <button
+              type="button"
+              class="btn btn-sm btn-primary me-2"
+              onclick="editProject('${project._id}')"
+            >
+              <i class="bi bi-pencil me-1"></i>
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              onclick="removeProject('${project._id}')"
+            >
+              <i class="bi bi-trash me-1"></i>
+              Delete
+            </button>
+
+          </td>
+
+        </tr>
+      `,
+      )
+      .join("");
+  }
+
+  function updateProjectPagination(pagination) {
+    const { page, totalPages, total } = pagination;
+
+    const displayTotalPages = Math.max(totalPages, 1);
+
+    projectPaginationInfo.textContent = `Page ${page} of ${displayTotalPages} · ${total} project${total === 1 ? "" : "s"}`;
+
+    previousProjectPage.disabled = page <= 1;
+
+    nextProjectPage.disabled = page >= displayTotalPages;
+  }
+
+  async function loadClients() {
+    try {
+      const response = await fetch("/api/clients?limit=100", {
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to load clients.");
+      }
+
+      const clients = result.data.clients;
+
+      projectClientFilter.innerHTML = `
+        <option value="">
+          All clients
+        </option>
+      `;
+
+      const projectClientSelect = document.getElementById("projectClient");
+
+      projectClientSelect.innerHTML = `
+        <option value="">
+          Select client
+        </option>
+      `;
+
+      clients.forEach((client) => {
+        const option = document.createElement("option");
+
+        option.value = client._id;
+        option.textContent = client.companyName;
+
+        projectClientFilter.appendChild(option.cloneNode(true));
+
+        projectClientSelect.appendChild(option);
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function loadProjects() {
+    projectsTableBody.innerHTML = `
+      <tr>
+        <td
+          colspan="7"
+          class="text-center text-muted py-5"
+        >
+          Loading projects...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const params = new URLSearchParams();
+
+      params.set("page", currentProjectPage);
+
+      params.set("limit", "20");
+
+      if (projectSearch.value.trim()) {
+        params.set("search", projectSearch.value.trim());
+      }
+
+      if (projectStatus.value) {
+        params.set("status", projectStatus.value);
+      }
+
+      if (projectClientFilter.value) {
+        params.set("client", projectClientFilter.value);
+      }
+
+      const response = await fetch(`/api/projects?${params.toString()}`, {
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to load projects.");
+      }
+
+      renderProjects(result.data.projects);
+
+      updateProjectPagination(result.data.pagination);
+    } catch (error) {
+      console.error(error);
+
+      projectsTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            class="text-center text-danger py-5"
+          >
+            ${escapeHtml(error.message)}
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  async function editProject(projectId) {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to load project.");
+      }
+
+      const project = result.data;
+
+      document.getElementById("projectId").value = project._id;
+
+      document.getElementById("projectName").value = project.name || "";
+
+      document.getElementById("projectClient").value =
+        project.client?._id || project.client || "";
+
+      document.getElementById("projectStatusInput").value =
+        project.status || "Planning";
+
+      document.getElementById("projectPriority").value =
+        project.priority || "Medium";
+
+      document.getElementById("projectStartDate").value = project.startDate
+        ? project.startDate.substring(0, 10)
+        : "";
+
+      document.getElementById("projectDueDate").value = project.dueDate
+        ? project.dueDate.substring(0, 10)
+        : "";
+
+      document.getElementById("projectBudget").value = project.budget ?? 0;
+
+      document.getElementById("projectDescription").value =
+        project.description || "";
+
+      document.getElementById("projectNotes").value = project.notes || "";
+
+      document.getElementById("projectModalTitle").textContent = "Edit Project";
+
+      document.getElementById("saveProjectButton").textContent =
+        "Update Project";
+
+      getProjectModal().show();
+    } catch (error) {
+      console.error(error);
+
+      alert(error.message);
+    }
+  }
+
+  async function removeProject(projectId) {
+    if (!confirm("Delete this project? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: "DELETE",
+
+        headers: {
+          "x-csrf-token": csrfToken,
+        },
+
+        credentials: "same-origin",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to delete project.");
+      }
+
+      await loadProjects();
+    } catch (error) {
+      console.error(error);
+
+      alert(error.message);
+    }
+  }
+
+  projectForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const projectId = document.getElementById("projectId").value;
+
+    const payload = {
+      name: document.getElementById("projectName").value.trim(),
+
+      client: document.getElementById("projectClient").value,
+
+      status: document.getElementById("projectStatusInput").value,
+
+      priority: document.getElementById("projectPriority").value,
+
+      startDate: document.getElementById("projectStartDate").value || null,
+
+      dueDate: document.getElementById("projectDueDate").value || null,
+
+      budget: Number(document.getElementById("projectBudget").value) || 0,
+
+      description: document.getElementById("projectDescription").value.trim(),
+
+      notes: document.getElementById("projectNotes").value.trim(),
+    };
+
+    const isEditing = Boolean(projectId);
+
+    try {
+      const response = await fetch(
+        isEditing ? `/api/projects/${projectId}` : "/api/projects",
+        {
+          method: isEditing ? "PATCH" : "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            "x-csrf-token": csrfToken,
+          },
+
+          credentials: "same-origin",
+
+          body: JSON.stringify(payload),
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Unable to save project.");
+      }
+
+      getProjectModal().hide();
+
+      currentProjectPage = 1;
+
+      await loadProjects();
+    } catch (error) {
+      console.error(error);
+
+      alert(error.message);
+    }
+  });
+
+  previousProjectPage.addEventListener("click", () => {
+    if (currentProjectPage <= 1) {
+      return;
+    }
+
+    currentProjectPage--;
+
+    loadProjects();
+  });
+
+  nextProjectPage.addEventListener("click", () => {
+    currentProjectPage++;
+
+    loadProjects();
+  });
+
+  projectStatus.addEventListener("change", () => {
+    currentProjectPage = 1;
+
+    loadProjects();
+  });
+
+  projectClientFilter.addEventListener("change", () => {
+    currentProjectPage = 1;
+
+    loadProjects();
+  });
+
+  let projectSearchTimeout;
+
+  projectSearch.addEventListener("input", () => {
+    clearTimeout(projectSearchTimeout);
+
+    projectSearchTimeout = setTimeout(() => {
+      currentProjectPage = 1;
+
+      loadProjects();
+    }, 350);
+  });
+
+  refreshProjects.addEventListener("click", async () => {
+    await loadClients();
+    await loadProjects();
+  });
+
+  async function initializeProjectsPage() {
+    await loadClients();
+    await loadProjects();
+  }
+
+  initializeProjectsPage();
+</script>
