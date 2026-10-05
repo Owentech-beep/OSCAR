@@ -11,6 +11,7 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().default("gpt-5.6-luna"),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
+  MCP_PORT: z.coerce.number().int().positive().default(4000),
 });
 
 const parsed = envSchema.safeParse(process.env);
