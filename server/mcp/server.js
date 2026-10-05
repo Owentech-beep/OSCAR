@@ -257,6 +257,123 @@ export function createMcpServer(principal) {
   );
 
   server.tool(
+    "update_lead",
+    "Update an existing CRM lead. This action requires user confirmation before execution.",
+    {
+      leadId: z.string().min(1),
+
+      companyName: z.string().trim().min(1).max(200).optional(),
+      contactName: z.string().trim().max(200).optional(),
+      email: z.string().trim().email().optional(),
+      phone: z.string().trim().max(50).optional(),
+      website: z.string().trim().url().optional(),
+      industry: z.string().trim().max(100).optional(),
+      location: z.string().trim().max(200).optional(),
+      source: z.string().trim().max(100).optional(),
+
+      leadScore: z.number().min(0).max(100).optional(),
+
+      status: z
+        .enum([
+          "New",
+          "Researching",
+          "Qualified",
+          "Contacted",
+          "Interested",
+          "Meeting",
+          "Proposal",
+          "Won",
+          "Lost",
+          "No Response",
+        ])
+        .optional(),
+
+      notes: z.string().trim().max(5000).optional(),
+      lastContact: z.string().datetime().optional(),
+      nextFollowUp: z.string().datetime().optional(),
+      assignedTo: z.string().optional(),
+    },
+    async ({ leadId, ...updates }) => {
+      try {
+        authorize("update_lead");
+
+        if (Object.keys(updates).length === 0) {
+          throw new Error(
+            "At least one lead field must be provided for update.",
+          );
+        }
+
+        const policy = getActionPolicy("update_lead");
+
+        if (!policy.requiresConfirmation) {
+          throw new Error("update_lead must require confirmation.");
+        }
+
+        const confirmation = createConfirmation({
+          userId: principal.userId,
+          action: "update_lead",
+          description: `Update lead ${leadId}.`,
+          payload: {
+            leadId,
+            ...updates,
+          },
+        });
+
+        return success({
+          requiresConfirmation: true,
+          confirmationId: confirmation.confirmationId,
+          action: confirmation.action,
+          description: confirmation.description,
+          expiresAt: confirmation.expiresAt,
+        });
+      } catch (error) {
+        return failure(error);
+      }
+    },
+  );
+
+  server.tool(
+    "delete_lead",
+    "Permanently delete a CRM lead. This destructive action requires explicit user confirmation.",
+    {
+      leadId: z.string().min(1),
+    },
+    async ({ leadId }) => {
+      try {
+        authorize("delete_lead");
+
+        const policy = getActionPolicy("delete_lead");
+
+        if (!policy.requiresConfirmation || !policy.destructive) {
+          throw new Error(
+            "delete_lead must require confirmation and be marked destructive.",
+          );
+        }
+
+        const confirmation = createConfirmation({
+          userId: principal.userId,
+          action: "delete_lead",
+          description: `Permanently delete lead ${leadId}.`,
+          payload: {
+            leadId,
+          },
+        });
+
+        return success({
+          requiresConfirmation: true,
+          destructive: true,
+          confirmationId: confirmation.confirmationId,
+          action: confirmation.action,
+          description: confirmation.description,
+          expiresAt: confirmation.expiresAt,
+        });
+      } catch (error) {
+        return failure(error);
+      }
+    },
+  );
+
+  server.tool(
     "confirm_action",
     "Confirm and execute a previously approved OSCAR action.",
     {
