@@ -1,7 +1,7 @@
 import express from "express";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
-
+import { authenticateMcpRequest } from "./auth.js";
 import { createMcpServer } from "./server.js";
 import { connectDatabase } from "../config/db.js";
 import { env } from "../config/env.js";
@@ -13,7 +13,7 @@ app.use(express.json());
 
 const transports = new Map();
 
-app.post("/mcp", async (req, res) => {
+app.post("/mcp", authenticateMcpRequest, async (req, res) => {
   try {
     const sessionId = req.headers["mcp-session-id"];
 
@@ -36,9 +36,8 @@ app.post("/mcp", async (req, res) => {
           transports.delete(currentSessionId);
         }
       };
-      const mcpServer = createMcpServer();
+      const mcpServer = createMcpServer(req.mcpPrincipal);
       await mcpServer.connect(transport);
-
     }
 
     if (!transport) {

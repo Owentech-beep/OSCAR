@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-
+import { authorizeMcpTool } from "./tool-authorization.js";
 import { getOscarBusinessContext } from "../services/oscar-context.service.js";
 import {
   getBusinessMetrics,
@@ -44,11 +44,19 @@ function failure(error) {
   };
 }
 
-export function createMcpServer() {
+export function createMcpServer(principal) {
   const server = new McpServer({
     name: "OSCAR MCP",
     version: "1.0.0",
   });
+
+  if (!principal) {
+    throw new Error("MCP principal is required.");
+  }
+
+  function authorize(action) {
+    authorizeMcpTool(principal, action);
+  }
 
   server.tool(
     "get_business_context",
@@ -56,12 +64,15 @@ export function createMcpServer() {
     {},
     async () => {
       try {
+        authorize("get_business_context");
+
         const business = await getOscarBusinessContext();
+
         return success(business);
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -79,7 +90,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -96,7 +107,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -113,7 +124,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -140,7 +151,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -151,9 +162,7 @@ export function createMcpServer() {
       limit: z.number().int().min(1).max(100).optional(),
       search: z.string().optional(),
       status: z.string().optional(),
-      sort: z
-        .enum(["newest", "oldest", "score-high", "score-low"])
-        .optional(),
+      sort: z.enum(["newest", "oldest", "score-high", "score-low"]).optional(),
     },
     async ({ page, limit, search, status, sort }) => {
       try {
@@ -169,7 +178,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -196,7 +205,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -211,15 +220,7 @@ export function createMcpServer() {
       project: z.string().optional(),
       client: z.string().optional(),
     },
-    async ({
-      page,
-      limit,
-      search,
-      status,
-      priority,
-      project,
-      client,
-    }) => {
+    async ({ page, limit, search, status, priority, project, client }) => {
       try {
         const data = await getTasks({
           page,
@@ -235,7 +236,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   server.tool(
@@ -280,7 +281,7 @@ export function createMcpServer() {
       } catch (error) {
         return failure(error);
       }
-    }
+    },
   );
 
   return server;
