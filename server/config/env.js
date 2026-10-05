@@ -12,6 +12,8 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),
   MCP_PORT: z.coerce.number().int().positive().default(4000),
+  MCP_AUTH_TOKEN: z.string().min(32, "MCP_AUTH_TOKEN must be at least 32 characters"),
+  MCP_AUTH_USER_ID: z.string().min(1, "MCP_AUTH_USER_ID is required"),
 });
 
 const parsed = envSchema.safeParse(process.env);

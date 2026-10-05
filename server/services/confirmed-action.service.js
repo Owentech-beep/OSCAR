@@ -18,11 +18,11 @@ import { createTask } from "./task.service.js";
 import { updateTask } from "./task.service.js";
 import { deleteTask } from "./task.service.js";
 
-export async function executeConfirmedAction(confirmation, req) {
+export async function executeConfirmedAction(confirmation, context) {
   const { action, payload } = confirmation;
 
-  const userId = req.session.user.id;
-  const role = req.session.user.role;
+  const userId = context.userId;
+  const role = context.role;
   const resourceType =
     action === "send_email"
       ? "Email"
@@ -359,7 +359,7 @@ export async function executeConfirmedAction(confirmation, req) {
         confirmationId: confirmation.confirmationId,
         action,
       },
-      req,
+      req:context.req,
     });
 
     return result;
@@ -395,7 +395,7 @@ export async function executeConfirmedAction(confirmation, req) {
         action,
         error: error.message,
       },
-      req,
+      req:context.req,
     });
 
     throw error;
