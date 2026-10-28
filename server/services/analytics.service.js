@@ -1,4 +1,7 @@
 import { BusinessMetric } from "../models/BusinessMetric.js";
+import Lead from "../models/Lead.js";
+import Client from "../models/Client.js";
+import Email from "../models/Email.js";
 
 export async function getRevenue({ from, to } = {}) {
   const filter = {};
@@ -75,37 +78,63 @@ export async function getBusinessMetrics({ from, to, limit = 30 } = {}) {
   };
 }
 
-export async function generateBusinessReport({
-  from,
-  to,
-} = {}) {
-  const metrics = await getBusinessMetrics({
-    from,
-    to,
-    limit: 100,
-  });
-
+export async function generateBusinessReport({ from, to } = {}) {
   const revenue = await getRevenue({
     from,
     to,
   });
 
-  const totals = metrics.metrics.reduce(
-    (acc, metric) => {
-      acc.activeClients += metric.activeClients;
-      acc.potentialLeads += metric.potentialLeads;
-      acc.emailsSent += metric.emailsSent;
-      acc.responses += metric.responses;
+  const emailFilter = {
+    status: "sent",
+  };
 
-      return acc;
-    },
-    {
-      activeClients: 0,
-      potentialLeads: 0,
-      emailsSent: 0,
-      responses: 0,
-    },
-  );
+  const responseFilter = {
+    direction: "inbound",
+  };
+
+  if (from || to) {
+    const dateFilter = {};
+
+    if (from) {
+      dateFilter.$gte = new Date(from);
+    }
+
+    if (to) {
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.$lte = endDate;
+    }
+
+    emailFilter.sentAt = dateFilter;
+    responseFilter.createdAt = dateFilter;
+  }
+
+  const [
+    activeClients,
+    potentialLeads,
+    emailsSent,
+    responses,
+    latestMetric,
+  ] = await Promise.all([
+    Client.countDocuments({
+      status: "Active",
+    }),
+
+    Lead.countDocuments({
+      status: {
+        $nin: ["Won", "Lost"],
+      },
+    }),
+
+    Email.countDocuments(emailFilter),
+
+    Email.countDocuments(responseFilter),
+
+    BusinessMetric.findOne()
+      .sort({ date: -1 })
+      .select("conversionRate date")
+      .lean(),
+  ]);
 
   return {
     period: {
@@ -115,10 +144,92 @@ export async function generateBusinessReport({
 
     revenue,
 
-    metrics,
+    metrics: {
+      activeClients,
+      potentialLeads,
+      emailsSent,
+      responses,
+      conversionRate: latestMetric?.conversionRate ?? 0,
+      conversionRateAsOf: latestMetric?.date ?? null,
+    },
 
-    totals,
+    dataAvailable:
+      revenue.dataPoints.length > 0 ||
+      activeClients > 0 ||
+      potentialLeads > 0 ||
+      emailsSent > 0 ||
+      responses > 0 ||
+      Boolean(latestMetric),
+  };
+}
 
-    dataAvailable: metrics.count > 0,
+export async function getEmailStatistics({ from, to } = {}) {
+  const filter = {};
+
+  if (from || to) {
+    const dateFilter = {};
+
+    if (from) {
+      dateFilter.$gte = new Date(from);
+    }
+
+    if (to) {
+      const endDate = new Date(to);
+      endDate.setHours(23, 59, 59, 999);
+      dateFilter.$lte = endDate;
+    }
+
+    filter.createdAt = dateFilter;
+  }
+
+  const [
+    total,
+    drafts,
+    scheduled,
+    sent,
+    failed,
+    inbound,
+  ] = await Promise.all([
+    Email.countDocuments(filter),
+
+    Email.countDocuments({
+      ...filter,
+      status: "draft",
+    }),
+
+    Email.countDocuments({
+      ...filter,
+      status: "scheduled",
+    }),
+
+    Email.countDocuments({
+      ...filter,
+      status: "sent",
+    }),
+
+    Email.countDocuments({
+      ...filter,
+      status: "failed",
+    }),
+
+    Email.countDocuments({
+      ...filter,
+      direction: "inbound",
+    }),
+  ]);
+
+  return {
+    period: {
+      from: from || null,
+      to: to || null,
+    },
+    totals: {
+      total,
+      drafts,
+      scheduled,
+      sent,
+      failed,
+      inbound,
+    },
   };
 }

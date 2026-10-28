@@ -32,12 +32,17 @@
     <link rel="stylesheet" href="/css/oscar.css" />
 
     <!-- OSCAR 3D Brain -->
-    <link rel="stylesheet" href="/oscar-brain/assets/index-ZGLLxTzO.css" />
+    <% if (brainAssets?.stylesheet) { %>
+    <link rel="stylesheet" href="<%= brainAssets.stylesheet %>" />
+    <% } %>
   </head>
 
   <body>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <%- body %>
-    <script type="module" src="/oscar-brain/assets/index-B-1GhQly.js""></script>
+    
+    <% if (brainAssets?.script) { %>
+  <script type="module" src="<%= brainAssets.script %>"></script>
+ <% } %>
   </body>
 </html>

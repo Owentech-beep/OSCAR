@@ -1001,4 +1001,109 @@ input {
     flex-shrink: 0;
   }
 }
+/* Leads page dropdown option readability only */
+.leads-dropdown option {
+  color: #000;
+  background-color: #fff;
+}
+/* Dashboard: four visible activities, with the rest scrollable */
+.dashboard-activity-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #64748b transparent;
+}
+
+.dashboard-activity-scroll > .activity-item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.04);
+}
+
+.dashboard-activity-scroll .activity-icon {
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+
+.dashboard-activity-scroll .activity-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.dashboard-activity-scroll .activity-content strong {
+  display: block;
+}
+
+.dashboard-activity-scroll .activity-content p {
+  margin: 4px 0;
+}
+
+.dashboard-activity-scroll:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+/* Keep Business Activity and System Overview within their columns */
+.empty-grid.dashboard-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+  min-width: 0;
+}
+
+.dashboard-overview-grid > .dashboard-panel {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.dashboard-overview-grid .panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-overview-grid .panel-heading > div {
+  min-width: 0;
+}
+
+.dashboard-overview-grid .activity-list,
+.dashboard-overview-grid .agent-list {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-overview-grid .agent-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.dashboard-overview-grid .agent-list span,
+.dashboard-overview-grid .agent-list strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .empty-grid.dashboard-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 

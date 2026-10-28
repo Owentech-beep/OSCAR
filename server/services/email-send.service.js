@@ -1,13 +1,30 @@
 import Email from "../models/Email.js";
 
 export async function markEmailAsSent(emailId, providerMessageId = null) {
-  const email = await Email.findByIdAndUpdate(
-    emailId,
+  if (
+    typeof providerMessageId !== "string" ||
+    !providerMessageId.trim()
+  ) {
+    const error = new Error(
+      "Provider acceptance could not be verified. " +
+      "Review the delivery attempt before retrying.",
+    );
+    error.statusCode = 502;
+    throw error;
+  }
+
+  const email = await Email.findOneAndUpdate(
     {
-      status: "sent",
-      type: "sent",
-      sentAt: new Date(),
-      providerMessageId,
+      _id: emailId,
+      status: "sending",
+    },
+    {
+      $set: {
+        status: "sent",
+        type: "sent",
+        sentAt: new Date(),
+        providerMessageId,
+      },
     },
     {
       new: true,
@@ -16,8 +33,11 @@ export async function markEmailAsSent(emailId, providerMessageId = null) {
   );
 
   if (!email) {
-    const error = new Error("Email not found.");
-    error.statusCode = 404;
+    const error = new Error(
+      "Could not record provider acceptance: " +
+      "the email is missing or no longer in sending status.",
+    );
+    error.statusCode = 409;
     throw error;
   }
 

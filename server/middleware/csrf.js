@@ -6,6 +6,7 @@ export function ensureCsrfToken(req, res, next) {
   }
 
   res.locals.csrfToken = req.session.csrfToken;
+
   next();
 }
 
@@ -15,12 +16,43 @@ export function requireCsrf(req, res, next) {
   }
 
   const supplied = req.body?._csrf || req.get("x-csrf-token");
-  const expected = req.session.csrfToken;
+  const expected = req.session?.csrfToken;
 
-  if (!expected || !supplied || !crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))) {
+  if (
+    typeof supplied !== "string" ||
+    typeof expected !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(supplied) ||
+    !/^[a-f0-9]{64}$/i.test(expected)
+  ) {
+    if (req.path.startsWith("/api/")) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid or missing CSRF token.",
+      });
+    }
+
     return res.status(403).render("errors/403", {
       title: "Invalid request",
-      user: req.session?.user ?? null
+      user: req.session?.user ?? null,
+    });
+  }
+
+  const valid = crypto.timingSafeEqual(
+    Buffer.from(supplied, "hex"),
+    Buffer.from(expected, "hex"),
+  );
+
+  if (!valid) {
+    if (req.path.startsWith("/api/")) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid or missing CSRF token.",
+      });
+    }
+
+    return res.status(403).render("errors/403", {
+      title: "Invalid request",
+      user: req.session?.user ?? null,
     });
   }
 

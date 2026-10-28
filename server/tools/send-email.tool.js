@@ -46,6 +46,11 @@ export const sendEmailTool = tool({
       description: `Send email to ${email.to} with subject "${email.subject}".`,
       payload: {
         emailId: email._id.toString(),
+        approvedEmail: {
+          to: email.to,
+          subject: email.subject,
+          body: email.body,
+        },
       },
     });
 

@@ -26,11 +26,7 @@ export async function getEmailById(emailId) {
   );
 }
 
-export async function getEmails({
-  page = 1,
-  limit = 20,
-  status = "",
-} = {}) {
+export async function getEmails({ page = 1, limit = 20, status = "" } = {}) {
   const filter = {};
 
   if (status) {
@@ -62,4 +58,80 @@ export async function getEmails({
 
 export async function getLeadEmails(leadId) {
   return Email.find({ lead: leadId }).sort({ createdAt: -1 });
+}
+
+export async function scheduleEmail(emailId, scheduledAt) {
+  const scheduledDate = new Date(scheduledAt);
+
+  if (Number.isNaN(scheduledDate.getTime())) {
+    const error = new Error("Invalid scheduled date.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (scheduledDate <= new Date()) {
+    const error = new Error("Scheduled time must be in the future.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const email = await Email.findOneAndUpdate(
+    {
+      _id: emailId,
+      direction: "outbound",
+      status: "draft",
+    },
+    {
+      $set: {
+        status: "scheduled",
+        scheduledAt: scheduledDate,
+      },
+    },
+    {
+      new: true,
+      runValidators: true,
+    },
+  );
+
+  if (!email) {
+    const existing = await Email.findById(emailId)
+      .select("status")
+      .lean();
+
+    const error = new Error(
+      existing
+        ? `Email cannot be scheduled from status "${existing.status}".`
+        : "Email not found.",
+    );
+
+    error.statusCode = existing ? 409 : 404;
+    throw error;
+  }
+
+  return email;
+}
+
+export async function claimScheduledEmail() {
+  const now = new Date();
+
+  return Email.findOneAndUpdate(
+    {
+      status: "scheduled",
+      scheduledAt: {
+        $lte: now,
+      },
+    },
+    {
+      $set: {
+        status: "sending",
+        sendingAt: now,
+      },
+    },
+    {
+      new: true,
+      sort: {
+        scheduledAt: 1,
+      },
+    },
+  );
 }

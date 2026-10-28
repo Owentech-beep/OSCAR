@@ -1,86 +1,120 @@
 <div class="app-shell">
   <aside class="sidebar" id="sidebar">
 
-  <div class="brand">
-    <div class="brand-title">OSCAR</div>
-    <div class="brand-subtitle">AI Agency Assistant</div>
+    <div class="brand">
+      <div class="brand-title">OSCAR</div>
+      <div class="brand-subtitle">AI Agency Assistant</div>
 
-    <!-- Desktop collapse -->
+      <!-- Desktop collapse -->
+      <button
+        type="button"
+        class="sidebar-toggle desktop-toggle"
+        id="desktopSidebarToggle"
+        aria-label="Collapse sidebar">
+        <i class="bi bi-chevron-left"></i>
+      </button>
+    </div>
+
+    <!-- Mobile close -->
     <button
       type="button"
-      class="sidebar-toggle desktop-toggle"
-      id="desktopSidebarToggle"
-      aria-label="Collapse sidebar"
-    >
-      <i class="bi bi-chevron-left"></i>
+      class="sidebar-toggle mobile-toggle"
+      id="mobileSidebarClose"
+      aria-label="Close navigation">
+      <i class="bi bi-x-lg"></i>
     </button>
-  </div>
 
-  <!-- Mobile close -->
-  <button
-    type="button"
-    class="sidebar-toggle mobile-toggle"
-    id="mobileSidebarClose"
-    aria-label="Close navigation"
-  >
-    <i class="bi bi-x-lg"></i>
-  </button>
+    <nav class="sidebar-nav">
 
-  <nav class="sidebar-nav">
-
-    <% const items = [
+      <% const items = [
       ["bi-grid-1x2-fill", "Dashboard", "/dashboard"],
-      ["bi-stars", "AI Assistant", "#"],
+      ["bi-stars", "AI Assistant", "#oscar-assistant"],
       ["bi-person-lines-fill", "Leads", "/leads"],
-      ["bi-send", "Outreach", "#"],
+      ["bi-send", "Outreach", "/emails"],
       ["bi-people", "Clients", "/clients"],
-      ["bi-kanban", "Projects", "#"],
+      ["bi-kanban", "Projects", "/projects"],
       ["bi-envelope", "Emails", "/emails"],
-      ["bi-calendar3", "Calendar", "#"],
+      ["bi-calendar3", "Calendar", "/calendar"],
       ["bi-check2-square", "Tasks", "/tasks"],
-      ["bi-bar-chart-line", "Analytics", "#"],
-      ["bi-receipt", "Invoices", "#"],
-      ["bi-file-earmark-text", "Documents", "#"],
-      ["bi-gear", "Settings", "#"]
-    ]; %>
+      ["bi-bar-chart-line", "Analytics", "/analytics"],
+      ["bi-receipt", "Invoices", "/invoices"],
+      ["bi-file-earmark-text", "Documents", "/documents"],
+      ["bi-gear", "Settings", "/settings"]
+      ]; %>
 
-    <% items.forEach(([icon, label, href]) => { %>
+      <% items.forEach(([icon, label, href]) => { %>
 
       <a
         href="<%= href %>"
         class="sidebar-link <%= currentPath === href ? 'active' : '' %>"
-        title="<%= label %>"
-      >
+        title="<%= label %>">
         <i class="bi <%= icon %>"></i>
         <span><%= label %></span>
       </a>
 
-    <% }) %>
+      <% }) %>
 
-  </nav>
+    </nav>
 
-  <div class="voice-panel">
-
-    <div class="small text-secondary">
-      OSCAR Voice
+   <div
+    class="voice-panel"
+    id="oscarSidebarVoice"
+    data-configured="<%= voiceConfigured ? 'true' : 'false' %>"
+  >
+    <div class="d-flex align-items-center justify-content-between gap-2">
+      <strong class="small">OSCAR Voice</strong>
+      <span id="sidebarVoiceBadge" class="badge bg-secondary">
+        <%= voiceConfigured ? "Ready" : "Not configured" %>
+      </span>
     </div>
 
-    <div class="voice-status">
-      <span class="status-dot"></span>
-      Online
-    </div>
+    <p
+      id="sidebarVoiceStatus"
+      class="small text-secondary mt-3 mb-3"
+      role="status"
+      aria-live="polite"
+    >
+      <%= voiceConfigured
+        ? "Start a voice conversation with OSCAR."
+        : "Voice will be available after AI setup is complete." %>
+    </p>
 
-    <button class="btn btn-oscar w-100 mt-3">
-      <i class="bi bi-mic-fill me-2"></i>
-      <span>Talk to OSCAR</span>
+    <button
+      id="sidebarVoiceStart"
+      type="button"
+      class="btn btn-oscar w-100"
+      <%= voiceConfigured ? "" : "disabled" %>
+    >
+      <i class="bi bi-mic-fill me-2" aria-hidden="true"></i>
+      Start conversation
     </button>
 
+    <div class="d-flex gap-2 mt-2">
+      <button
+        id="sidebarVoiceMute"
+        type="button"
+        class="btn btn-sm btn-outline-light flex-fill"
+        aria-pressed="false"
+        disabled
+      >Mute</button>
+
+      <button
+        id="sidebarVoiceEnd"
+        type="button"
+        class="btn btn-sm btn-outline-danger flex-fill"
+        disabled
+      >End</button>
+    </div>
+
+    <p class="small text-secondary mt-3 mb-0">
+      Business actions still require their normal approvals.
+    </p>
   </div>
 
-</aside>
+  </aside>
 
-<!-- Mobile overlay -->
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
   <main class="main-content">
     <header class="topbar">
@@ -97,7 +131,9 @@
 
       <div class="topbar-actions">
         <button class="icon-btn"><i class="bi bi-bell"></i></button>
-        <button class="icon-btn"><i class="bi bi-gear"></i></button>
+        <a href="/settings" class="icon-btn" aria-label="Open settings">
+        <i class="bi bi-gear"></i>
+        </a>
         <div class="profile">
           <div class="avatar"><%= user.name.slice(0, 1).toUpperCase() %></div>
           <div class="d-none d-md-block">
@@ -118,8 +154,8 @@
         <div class="hero-copy">
           <p class="eyebrow">OWENTECH COMMAND CENTER</p>
           <h1>
-          <span id="timeGreeting">Good Evening</span>,
-          <%= user.name.split(" ")[0] %> 
+            <span id="timeGreeting">Good Evening</span>,
+            <%= user.name.split(" ")[0] %>
           </h1>
           <p class="hero-text">
             I'm OSCAR, your AI business assistant.<br>
@@ -127,92 +163,142 @@
           </p>
 
           <div class="quick-actions">
-            <button class="btn btn-oscar"><i class="bi bi-search me-2"></i>Find
-              new leads</button>
-            <button class="btn btn-ghost"><i class="bi bi-send me-2"></i>Send
-              outreach emails</button>
-            <button class="btn btn-ghost"><i
-                class="bi bi-bar-chart-line me-2"></i>Show business
-              report</button>
-            <button class="btn btn-ghost"><i
-                class="bi bi-globe2 me-2"></i>Analyze website</button>
+            <button
+              type="button"
+              class="btn btn-oscar"
+              data-oscar-prompt="Find new leads for OwenTech. Identify suitable prospects and explain why they are good fits.">
+              <i class="bi bi-search me-2"></i>
+              Find new leads
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-oscar-prompt="Help me prepare outreach emails for suitable prospects. Draft them for review before sending.">
+              <i class="bi bi-send me-2"></i>
+              Send outreach emails
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-oscar-prompt="Generate a business report using the available OwenTech business data. Clearly identify any unavailable metrics.">
+              <i class="bi bi-bar-chart-line me-2"></i>
+              Show business report
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-oscar-prompt="Help me analyze a website. Ask me for the website URL if I have not provided one.">
+              <i class="bi bi-globe2 me-2"></i>
+              Analyze website
+            </button>
           </div>
         </div>
 
         <!-- ================= OSCAR CORE ================= -->
 
-<div class="oscar-core">
+        <div class="oscar-core"  id="oscar-assistant">
 
-  <!-- ================= 3D OSCAR BRAIN ================= -->
+          <!-- ================= 3D OSCAR BRAIN ================= -->
 
-        <div class="oscar-brain">
-          <div
-            id="oscarBrain"
-            class="oscar-brain-stage"
-            aria-label="OSCAR AI Brain"
-          ></div>
-        </div>
-
-        <!-- ================= OSCAR CHAT ================= -->
-
-        <div class="chat-card glass-card">
-
-          <div class="chat-header d-flex justify-content-between align-items-center">
-
-            <span>Chat with OSCAR</span>
-
-            <span class="status-pill">
-              <span class="status-dot"></span>
-              Online
-            </span>
-
+          <div class="oscar-brain">
+            <div
+              id="oscarBrain"
+              class="oscar-brain-stage"
+              aria-label="OSCAR AI Brain"></div>
           </div>
 
-          <div id="oscarMessages" class="oscar-messages">
+          <!-- ================= OSCAR CHAT ================= -->
 
-            <div class="chat-message oscar-message">
+          <div class="chat-card glass-card">
 
-              <strong>
-                We're connected, <%= user.name.split(" ")[0] %>. 👋
-              </strong>
+            <div
+              class="chat-header d-flex justify-content-between align-items-center">
 
-              <p class="mb-0 mt-2">
-                Ask me about your leads, clients, business data, or anything
-                you need help with.
-              </p>
+              <span>Chat with OSCAR</span>
+
+              <span class="status-pill" id="oscarChatStatus">
+              <%= voiceConfigured ? "Configured" : "Not configured" %>
+              </span>
 
             </div>
 
-          </div>
+            <div id="oscarMessages" class="oscar-messages">
 
-          <div id="confirmationContainer"></div>
+              <div class="chat-message oscar-message">
 
-          <form id="oscarChatForm" class="chat-input">
+               <strong>
+                <%= voiceConfigured
+                  ? "How can I help, Sir?"
+                  : "OSCAR workspace is ready, Sir." %>
+              </strong>
 
-            <input
-              id="oscarInput"
-              type="text"
-              class="form-control"
-              placeholder="Ask OSCAR anything..."
-              autocomplete="off"
-              required
-            />
+              <p class="mb-0 mt-2">
+                <%= voiceConfigured
+                  ? "Ask about your leads, clients, invoices, or business operations."
+                  : "AI chat and voice are awaiting configuration. Your business pages remain available while we complete the build." %>
+              </p>
 
-            <button
+              </div>
+
+            </div>
+
+            <div id="confirmationContainer"></div>
+
+            <form id="oscarChatForm" class="chat-input">
+
+              <button
+                type="button"
+                id="oscarVoiceBtn"
+                class="oscar-send-btn"
+                title="Start voice conversation"
+                aria-label="Start voice conversation"
+                aria-pressed="false">
+                <i class="bi bi-mic-fill"></i>
+              </button>
+
+              <input
+                id="oscarInput"
+                type="text"
+                class="form-control"
+                placeholder="<%= voiceConfigured ? 'Ask OSCAR anything...' : 'AI setup pending' %>"
+                autocomplete="off"
+                <%= voiceConfigured ? "" : "disabled" %>
+                required
+              />
+
+              <button
+              id="oscarSendMessageBtn"
               type="submit"
               class="oscar-send-btn"
-              title="Send"
+              title="Send message"
+              aria-label="Send message"
+              <%= voiceConfigured ? "" : "disabled" %>
             >
               <i class="bi bi-send-fill"></i>
             </button>
 
-          </form>
+            </form>
+
+            <div
+              id="oscarVoiceStatus"
+              class="small mt-2"
+              role="status"
+              aria-live="polite">
+              <%= voiceConfigured
+              ? "Voice conversation is off."
+              : "Voice will be available after AI setup is complete." %>
+            </div>
+
+            <audio id="oscarVoiceAudio" autoplay></audio>
+
+          </div>
 
         </div>
-
+        <!-- ================= END OSCAR CORE ================= -->
       </div>
-      <!-- ================= END OSCAR CORE ================= -->
- </div>
 
       <div class="kpi-grid">
         <%- include("../partials/kpi", { icon: "bi-currency-dollar", label:
@@ -235,38 +321,128 @@
         trend: "Database" }) %>
       </div>
 
-      <div class="empty-grid">
+      <div class="empty-grid dashboard-overview-grid">
         <div class="dashboard-panel glass-card">
           <div class="panel-heading">
             <div>
-              <span class="eyebrow">PHASE 1</span>
-              <h2>Recent activity</h2>
+              <span class="eyebrow">BUSINESS ACTIVITY</span>
+              <h2>Recent Activity</h2>
             </div>
-            <span class="badge-soft">Live foundation</span>
+
+            <span class="badge-soft">
+              <%= activities.length %> recent events
+            </span>
           </div>
-          <div class="empty-state">
-            <i class="bi bi-database-check"></i>
-            <h3>Database-backed dashboard</h3>
-            <p>CRM records, activity, outreach and analytics will populate
-              this
-              workspace as each phase is implemented.</p>
+
+         <% if (activities.length > 0) { %>
+          <div
+            id="dashboardActivityList"
+            class="activity-list dashboard-activity-scroll"
+            role="region"
+            aria-label="Recent business activity"
+            tabindex="0"
+          >
+            <%
+              const activityLabels = {
+                "auth.login": "Signed in",
+                "auth.logout": "Signed out",
+                "confirmed_create_lead": "Created a lead",
+                "confirmed_update_lead": "Updated a lead",
+                "confirmed_delete_lead": "Deleted a lead",
+                "confirmed_create_client": "Created a client",
+                "confirmed_update_client": "Updated a client",
+                "confirmed_delete_client": "Deleted a client",
+                "confirmed_send_email": "Sent an email",
+                "confirmed_schedule_email": "Scheduled an email",
+                "confirmed_create_invoice": "Created an invoice",
+                "confirmed_update_invoice": "Updated an invoice",
+                "confirmed_mark_invoice_sent": "Marked an invoice as sent",
+                "confirmed_mark_invoice_paid": "Marked an invoice as paid",
+                "confirmed_cancel_invoice": "Cancelled an invoice"
+              };
+            %>
+
+            <% activities.forEach((activity) => { %>
+              <div class="activity-item">
+                <div class="activity-icon">
+                  <i class="bi bi-activity" aria-hidden="true"></i>
+                </div>
+
+                <div class="activity-content">
+                  <strong>
+                    <%= activityLabels[activity.action] ||
+                      String(activity.action || "Business activity").replace(/_/g, " ") %>
+                  </strong>
+
+                  <p>
+                    <%= activity.resourceType %>
+
+                    <% if (
+                      activity.resourceId &&
+                      !String(activity.action || "").startsWith("auth.")
+                    ) { %>
+                      · Reference: <%= activity.resourceId %>
+                    <% } %>
+                  </p>
+
+                  <small>
+                    <%= activity.actor %>
+                    ·
+                    <%= new Date(activity.createdAt).toLocaleString("en-ZA", {
+                      dateStyle: "medium",
+                      timeStyle: "short"
+                    }) %>
+                  </small>
+                </div>
+              </div>
+            <% }) %>
           </div>
+          <% } else { %>
+            <div class="empty-state">
+              <i class="bi bi-clock-history"></i>
+              <h3>No activity recorded yet</h3>
+              <p>
+                Recorded business actions will appear here.
+              </p>
+            </div>
+          <% } %>
         </div>
 
-        <div class="dashboard-panel glass-card">
+       <div class="dashboard-panel glass-card">
           <div class="panel-heading">
             <div>
-              <span class="eyebrow">OSCAR BRAIN</span>
-              <h2>Agent status</h2>
+              <span class="eyebrow">OSCAR SYSTEM</span>
+              <h2>System Overview</h2>
             </div>
-            <span class="status-pill">Foundation ready</span>
+
+            <span class="status-pill">Operational Overview</span>
           </div>
+
           <div class="agent-list">
-            <div><span>Authentication</span><strong>Ready</strong></div>
-            <div><span>MongoDB</span><strong>Connected</strong></div>
-            <div><span>Tool layer</span><strong>Phase 3</strong></div>
-            <div><span>MCP</span><strong>Phase 7</strong></div>
-            <div><span>Voice</span><strong>Phase 9</strong></div>
+            <div>
+              <span>Authentication</span>
+              <strong>Session protected</strong>
+            </div>
+
+            <div>
+              <span>Business Database</span>
+              <strong>MongoDB-backed</strong>
+            </div>
+
+            <div>
+              <span>Text Chat</span>
+              <strong>AI credentials required</strong>
+            </div>
+
+            <div>
+              <span>Realtime Voice</span>
+              <strong>AI credentials required</strong>
+            </div>
+
+            <div>
+              <span>MCP Tools</span>
+              <strong>Available for integration</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -275,6 +451,7 @@
 </div>
 
 <script>
+  const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
 
   function updateTimeGreeting() {
     const greetingElement =
@@ -484,12 +661,53 @@ window.addEventListener("resize", () => {
   confirmButton.textContent = "Confirm";
 
   // CANCEL
-  cancelButton.addEventListener("click", () => {
-    confirmationContainer.innerHTML = "";
+  cancelButton.addEventListener("click", async () => {
+  const confirmationId =
+    confirmation.confirmationId || confirmation.id;
 
+  if (!confirmationId) {
+    addOscarMessage("Unable to cancel: confirmation ID is missing.");
+    return;
+  }
+
+  cancelButton.disabled = true;
+  confirmButton.disabled = true;
+  cancelButton.textContent = "Cancelling...";
+
+  try {
+    const response = await fetch(
+      `/api/confirmations/${encodeURIComponent(confirmationId)}/cancel`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
+        body: JSON.stringify({}),
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || result.success !== true) {
+      throw new Error(
+        result.error || "Unable to cancel the action.",
+      );
+    }
+
+    card.remove();
     addOscarMessage("Action cancelled.");
-  });
+  } catch (error) {
+    addOscarMessage(
+      error.message || "Unable to cancel the action.",
+    );
 
+    cancelButton.disabled = false;
+    confirmButton.disabled = false;
+    cancelButton.textContent = "Cancel";
+  }
+});
   // CONFIRM
   confirmButton.addEventListener("click", async () => {
     confirmButton.disabled = true;
@@ -506,8 +724,9 @@ window.addEventListener("resize", () => {
 
         credentials: "same-origin",
 
-        headers: {
+       headers: {
           "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
         },
 
         body: JSON.stringify({
@@ -645,25 +864,22 @@ function formatConfirmationValue(key, value) {
   return String(value);
 }
 
-  oscarChatForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
+ async function submitOscarMessage(message) {
+  const sendButton = document.getElementById("oscarSendMessageBtn");
 
-  const sendButton = oscarChatForm.querySelector(".oscar-send-btn");
-
-  const message = oscarInput.value.trim();
-
-  if (!message) {
+  if (!voiceConfigured || !message?.trim() || sendButton?.disabled) {
     return;
   }
 
-  sendButton.disabled = true;
+  if (sendButton) {
+    sendButton.disabled = true;
+  }
 
   addOscarMessage(message, "user");
 
   oscarInput.value = "";
 
   const thinkingMessage = document.createElement("div");
-
   thinkingMessage.className = "chat-message oscar-message";
   thinkingMessage.id = "oscarThinking";
   thinkingMessage.textContent = "OSCAR is thinking...";
@@ -677,10 +893,9 @@ function formatConfirmationValue(key, value) {
       credentials: "same-origin",
       headers: {
         "Content-Type": "application/json",
+        "x-csrf-token": csrfToken,
       },
-      body: JSON.stringify({
-        message,
-      }),
+      body: JSON.stringify({ message }),
     });
 
     const result = await response.json();
@@ -689,9 +904,8 @@ function formatConfirmationValue(key, value) {
 
     if (response.status === 503) {
       addOscarMessage(
-        "🟡 OSCAR AI is currently offline. Please add your OPENAI_API_KEY to activate AI capabilities."
+        "OSCAR AI is currently offline. Add OPENAI_API_KEY to activate AI capabilities."
       );
-
       return;
     }
 
@@ -706,23 +920,631 @@ function formatConfirmationValue(key, value) {
     if (result.data.confirmation) {
       showConfirmation(result.data.confirmation);
     }
-
   } catch (error) {
-    console.error(error);
+    console.error("OSCAR chat error:", error);
 
     document.getElementById("oscarThinking")?.remove();
 
     addOscarMessage(
       error.message || "Unable to connect to OSCAR."
     );
-
   } finally {
-    sendButton.disabled = false;
-
-    // If the request failed, return the brain to Ready.
-    if (oscarBrain?.classList.contains("brain-thinking")) {
-      
+    if (sendButton) {
+      sendButton.disabled = !voiceConfigured;
     }
   }
+}
+
+oscarChatForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  await submitOscarMessage(oscarInput.value.trim());
 });
+
+document.querySelectorAll("[data-oscar-prompt]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    const prompt = button.dataset.oscarPrompt?.trim();
+
+    if (!prompt) {
+      return;
+    }
+
+    oscarInput.value = prompt;
+
+    await submitOscarMessage(prompt);
+  });
+});
+
+// ================= OSCAR REALTIME VOICE =================
+
+const oscarVoiceBtn = document.getElementById("oscarVoiceBtn");
+const oscarVoiceStatus = document.getElementById("oscarVoiceStatus");
+const oscarVoiceAudio = document.getElementById("oscarVoiceAudio");
+
+let oscarVoicePC = null;
+let oscarVoiceStream = null;
+let oscarVoiceChannel = null;
+let oscarVoiceActive = false;
+let oscarVoiceStarting = false;
+let oscarVoiceStopping = false;
+let oscarVoiceSessionId = 0;
+
+const sidebarVoicePanel = document.getElementById("oscarSidebarVoice");
+const sidebarVoiceStart = document.getElementById("sidebarVoiceStart");
+const sidebarVoiceMute = document.getElementById("sidebarVoiceMute");
+const sidebarVoiceEnd = document.getElementById("sidebarVoiceEnd");
+const sidebarVoiceStatus = document.getElementById("sidebarVoiceStatus");
+const sidebarVoiceBadge = document.getElementById("sidebarVoiceBadge");
+
+const voiceConfigured =
+  sidebarVoicePanel?.dataset.configured === "true";
+
+  document.querySelectorAll("[data-oscar-prompt]").forEach((button) => {
+  button.disabled = !voiceConfigured;
+
+  if (!voiceConfigured) {
+    button.title = "Available after AI setup is complete.";
+  }
+});
+
+function syncOscarVoiceControls() {
+  const tracks = oscarVoiceStream?.getAudioTracks() || [];
+  const microphoneMuted =
+    tracks.length > 0 && tracks.every((track) => !track.enabled);
+
+  const busy = oscarVoiceStarting || oscarVoiceStopping;
+  const canMute = oscarVoiceActive && tracks.length > 0;
+
+  sidebarVoiceStart.disabled =
+    !voiceConfigured || busy || oscarVoiceActive;
+
+  sidebarVoiceEnd.disabled =
+    oscarVoiceStopping || (!oscarVoiceActive && !oscarVoiceStarting);
+
+  sidebarVoiceMute.disabled = !canMute;
+  sidebarVoiceMute.textContent = microphoneMuted ? "Unmute" : "Mute";
+  sidebarVoiceMute.setAttribute(
+    "aria-pressed",
+    String(microphoneMuted),
+  );
+
+  if (!voiceConfigured) {
+    sidebarVoiceBadge.textContent = "Not configured";
+  } else if (oscarVoiceStopping) {
+    sidebarVoiceBadge.textContent = "Ending";
+  } else if (oscarVoiceStarting) {
+    sidebarVoiceBadge.textContent = "Connecting";
+  } else if (oscarVoiceActive) {
+    sidebarVoiceBadge.textContent = microphoneMuted ? "Muted" : "Active";
+  } else {
+    sidebarVoiceBadge.textContent = "Ready";
+  }
+
+  sidebarVoiceBadge.className =
+    oscarVoiceActive && !microphoneMuted
+      ? "badge bg-success"
+      : "badge bg-secondary";
+
+  if (oscarVoiceBtn) {
+    oscarVoiceBtn.disabled = !voiceConfigured || busy;
+  }
+}
+
+sidebarVoiceStart.addEventListener("click", () => {
+  void startOscarVoice();
+});
+
+sidebarVoiceEnd.addEventListener("click", () => {
+  void stopOscarVoice();
+});
+
+sidebarVoiceMute.addEventListener("click", () => {
+  if (!oscarVoiceActive || !oscarVoiceStream) return;
+
+  const tracks = oscarVoiceStream.getAudioTracks();
+  const currentlyMuted = tracks.every((track) => !track.enabled);
+
+  tracks.forEach((track) => {
+    track.enabled = currentlyMuted;
+  });
+
+  syncOscarVoiceControls();
+});
+
+function setOscarVoiceStatus(message) {
+  if (oscarVoiceStatus) {
+    oscarVoiceStatus.textContent = message;
+  }
+
+  if (sidebarVoiceStatus) {
+    sidebarVoiceStatus.textContent = message;
+  }
+
+  syncOscarVoiceControls();
+}
+
+function sendOscarVoiceEvent(event) {
+  if (oscarVoiceChannel?.readyState === "open") {
+    oscarVoiceChannel.send(JSON.stringify(event));
+  }
+}
+
+async function handleOscarVoiceToolCall(event) {
+
+    const sessionId = oscarVoiceSessionId;
+    const channel = oscarVoiceChannel;
+
+    if (!channel || channel.readyState !== "open") {
+      return;
+    }
+  if (event.name !== "ask_oscar") {
+    sendOscarVoiceEvent({
+      type: "conversation.item.create",
+      item: {
+        type: "function_call_output",
+        call_id: event.call_id,
+        output: JSON.stringify({
+          success: false,
+          error: "Unsupported OSCAR tool.",
+        }),
+      },
+    });
+
+    sendOscarVoiceEvent({ type: "response.create" });
+    return;
+  }
+
+  let output;
+
+  try {
+    const args = JSON.parse(event.arguments || "{}");
+
+    if (
+      typeof args.message !== "string" ||
+      !args.message.trim() ||
+      args.message.length > 4000
+    ) {
+      throw new Error("Invalid voice request.");
+    }
+
+    setOscarVoiceStatus("OSCAR is working on your request...");
+
+    const response = await fetch("/api/oscar/chat", {
+      method: "POST",
+      credentials: "same-origin",
+     headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": csrfToken,
+      },
+      body: JSON.stringify({
+        message: args.message.trim(),
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "OSCAR could not complete your request."
+      );
+    }
+
+    const data = result.data;
+
+    // Keep consequential actions behind OSCAR's existing confirmation UI.
+    if (data.confirmation) {
+      showConfirmation(data.confirmation);
+    }
+
+    output = {
+      success: true,
+      response: data.response,
+      confirmationRequired: Boolean(data.confirmation),
+      confirmationDescription: data.confirmation?.description ?? null,
+    };
+  } catch (error) {
+    console.error("OSCAR voice tool error:", error);
+
+    output = {
+      success: false,
+      error: error.message || "Unable to process your request.",
+    };
+  }
+
+    // Ignore results from a session that has ended or been replaced.
+    if (
+      sessionId !== oscarVoiceSessionId ||
+      channel !== oscarVoiceChannel ||
+      channel.readyState !== "open"
+    ) {
+      return;
+    }
+
+        channel.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "function_call_output",
+            call_id: event.call_id,
+            output: JSON.stringify(output),
+          },
+        })
+      );
+
+      // Request one response after returning the tool result.
+      channel.send(JSON.stringify({ type: "response.create" }));
+    }
+
+function handleOscarVoiceEvent(event) {
+  switch (event.type) {
+    case "session.created":
+      setOscarVoiceStatus("OSCAR is listening. Speak naturally.");
+      break;
+
+    case "input_audio_buffer.speech_started":
+      setOscarVoiceStatus("Listening to you...");
+      break;
+
+    case "input_audio_buffer.speech_stopped":
+      setOscarVoiceStatus("OSCAR is thinking...");
+      break;
+
+    case "conversation.item.input_audio_transcription.completed":
+      if (event.transcript?.trim()) {
+        addOscarMessage(event.transcript.trim(), "user");
+      }
+      break;
+
+    case "response.output_audio_transcript.done":
+      if (event.transcript?.trim()) {
+        addOscarMessage(event.transcript.trim());
+      }
+
+      setOscarVoiceStatus("OSCAR is listening. Keep talking.");
+      break;
+
+    case "response.function_call_arguments.done":
+      void handleOscarVoiceToolCall(event);
+      break;
+
+    case "error":
+      console.error("OSCAR Realtime error:", event.error);
+      setOscarVoiceStatus(
+        event.error?.message || "Voice encountered an error."
+      );
+      break;
+  }
+}
+
+async function startOscarVoice() {
+
+    if (!voiceConfigured) {
+    setOscarVoiceStatus(
+      "Voice will be available after AI setup is complete.",
+    );
+    return;
+  }
+
+  if (oscarVoiceActive || oscarVoiceStarting || oscarVoiceStopping) return;
+
+  const sessionId = ++oscarVoiceSessionId;
+
+  if (
+    !navigator.mediaDevices?.getUserMedia ||
+    !window.RTCPeerConnection
+  ) {
+    setOscarVoiceStatus("Voice is unavailable in this browser or connection.");
+    return;
+  }
+
+  oscarVoiceStarting = true;
+  oscarVoiceBtn.disabled = true;
+  setOscarVoiceStatus("Connecting to OSCAR Voice...");
+
+  try {
+    // Request microphone access.
+    const microphoneStream =
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    if (sessionId !== oscarVoiceSessionId || oscarVoiceStopping) {
+      microphoneStream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    oscarVoiceStream = microphoneStream;
+
+    // Request a short-lived credential from OSCAR's authenticated backend.
+    const sessionResponse = await fetch("/api/oscar/voice/session", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": csrfToken,
+      },
+    });
+
+    const sessionResult = await sessionResponse.json();
+
+    if (sessionId !== oscarVoiceSessionId || oscarVoiceStopping) return;
+
+    if (!sessionResponse.ok || !sessionResult.success) {
+      throw new Error(
+        sessionResult.error || "Could not create a voice session."
+      );
+    }
+
+    const clientSecret = sessionResult.data?.clientSecret;
+
+    if (!clientSecret) {
+      throw new Error("The voice session returned no client credential.");
+    }
+
+    // Establish the WebRTC connection.
+    const peerConnection = new RTCPeerConnection();
+    oscarVoicePC = peerConnection;
+
+    peerConnection.ontrack = (event) => {
+      if (
+        sessionId !== oscarVoiceSessionId ||
+        peerConnection !== oscarVoicePC
+      ) {
+        return;
+      }
+
+      if (event.streams?.[0]) {
+        oscarVoiceAudio.srcObject = event.streams[0];
+
+        oscarVoiceAudio.play().catch((error) => {
+          console.warn("Audio playback needs user interaction:", error);
+        });
+      }
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+      if (
+        sessionId !== oscarVoiceSessionId ||
+        peerConnection !== oscarVoicePC
+      ) {
+        return;
+      }
+
+      const state = peerConnection.connectionState;
+
+      if (state === "connected") {
+        setOscarVoiceStatus("OSCAR is listening. Speak naturally.");
+      } else if (state === "disconnected") {
+        setOscarVoiceStatus(
+          "Voice connection interrupted. You may need to reconnect."
+        );
+      } else if (state === "failed") {
+        setOscarVoiceStatus(
+          "Voice connection failed. Please restart the conversation."
+        );
+        void stopOscarVoice();
+      }
+    };
+
+    microphoneStream.getTracks().forEach((track) => {
+      peerConnection.addTrack(track, microphoneStream);
+    });
+
+    // Receive Realtime API events.
+    const dataChannel = peerConnection.createDataChannel("oscar-events");
+    oscarVoiceChannel = dataChannel;
+
+    dataChannel.addEventListener("open", () => {
+      if (
+        sessionId === oscarVoiceSessionId &&
+        dataChannel === oscarVoiceChannel
+      ) {
+        setOscarVoiceStatus("OSCAR is listening. Speak naturally.");
+      }
+    });
+
+    dataChannel.addEventListener("message", (message) => {
+      if (
+        sessionId !== oscarVoiceSessionId ||
+        dataChannel !== oscarVoiceChannel
+      ) {
+        return;
+      }
+
+      try {
+        handleOscarVoiceEvent(JSON.parse(message.data));
+      } catch (error) {
+        console.error("Invalid OSCAR voice event:", error);
+      }
+    });
+
+    // Create the WebRTC offer.
+    const offer = await peerConnection.createOffer();
+
+    if (sessionId !== oscarVoiceSessionId || oscarVoiceStopping) return;
+
+    await peerConnection.setLocalDescription(offer);
+
+    if (sessionId !== oscarVoiceSessionId || oscarVoiceStopping) return;
+
+    const answerResponse = await fetch(
+      "https://api.openai.com/v1/realtime/calls",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${clientSecret}`,
+          "Content-Type": "application/sdp",
+        },
+        body: offer.sdp,
+      }
+    );
+
+    if (!answerResponse.ok) {
+      const errorText = await answerResponse.text();
+
+      console.error(
+        "Realtime connection failed:",
+        answerResponse.status,
+        errorText
+      );
+
+      throw new Error("Unable to establish the realtime connection.");
+    }
+
+    const answerSdp = await answerResponse.text();
+
+    if (
+      sessionId !== oscarVoiceSessionId ||
+      oscarVoiceStopping ||
+      peerConnection !== oscarVoicePC
+    ) {
+      return;
+    }
+
+    await peerConnection.setRemoteDescription({
+      type: "answer",
+      sdp: answerSdp,
+    });
+
+    if (
+      sessionId !== oscarVoiceSessionId ||
+      oscarVoiceStopping ||
+      peerConnection !== oscarVoicePC
+    ) {
+      return;
+    }
+
+    oscarVoiceActive = true;
+
+    oscarVoiceBtn.setAttribute("aria-pressed", "true");
+    oscarVoiceBtn.title = "End voice conversation";
+    oscarVoiceBtn.innerHTML = '<i class="bi bi-telephone-x-fill"></i>';
+
+    setOscarVoiceStatus("Connected. You can speak to OSCAR.");
+    } catch (error) {
+    console.error("OSCAR voice startup failed:", error);
+
+    if (sessionId === oscarVoiceSessionId) {
+      await stopOscarVoice();
+
+      setOscarVoiceStatus(
+        error.message || "Could not start OSCAR Voice.",
+      );
+    }
+  } finally {
+    if (sessionId === oscarVoiceSessionId) {
+      oscarVoiceStarting = false;
+      syncOscarVoiceControls();
+    }
+  }
+}
+
+async function stopOscarVoice() {
+  if (oscarVoiceStopping) return;
+
+  oscarVoiceStopping = true;
+  oscarVoiceSessionId++;
+
+  try {
+    oscarVoiceActive = false;
+
+    if (oscarVoiceChannel) {
+      oscarVoiceChannel.close();
+      oscarVoiceChannel = null;
+    }
+
+    if (oscarVoicePC) {
+      oscarVoicePC.close();
+      oscarVoicePC = null;
+    }
+
+    if (oscarVoiceStream) {
+      oscarVoiceStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      oscarVoiceStream = null;
+    }
+
+    if (oscarVoiceAudio) {
+      oscarVoiceAudio.pause();
+      oscarVoiceAudio.srcObject = null;
+    }
+
+    if (oscarVoiceBtn) {
+    oscarVoiceBtn.disabled = false;
+    oscarVoiceBtn.setAttribute("aria-pressed", "false");
+    oscarVoiceBtn.title = "Start voice conversation";
+    oscarVoiceBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+    }
+
+    setOscarVoiceStatus("Voice conversation ended.");
+   } finally {
+    oscarVoiceStarting = false;
+    oscarVoiceStopping = false;
+    syncOscarVoiceControls();
+  }
+}
+
+oscarVoiceBtn?.addEventListener("click", () => {
+  if (oscarVoiceActive) {
+    void stopOscarVoice();
+  } else {
+    void startOscarVoice();
+  }
+});
+
+// Release the microphone if the user leaves the dashboard.
+window.addEventListener("pagehide", () => {
+  void stopOscarVoice();
+});
+
+// ================= END OSCAR REALTIME VOICE =================
+</script>
+<script>
+  (() => {
+    const list = document.getElementById("dashboardActivityList");
+    if (!list) return;
+
+    let frame;
+
+    function fitFourActivities() {
+      const rows = Array.from(list.children);
+
+      if (rows.length <= 4) {
+        list.style.removeProperty("max-height");
+        return;
+      }
+
+      const first = rows[0].getBoundingClientRect();
+      const fourth = rows[3].getBoundingClientRect();
+      const styles = getComputedStyle(list);
+
+      const padding =
+        (parseFloat(styles.paddingTop) || 0) +
+        (parseFloat(styles.paddingBottom) || 0);
+
+      const borders =
+        (parseFloat(styles.borderTopWidth) || 0) +
+        (parseFloat(styles.borderBottomWidth) || 0);
+
+      const extra =
+        styles.boxSizing === "border-box" ? padding + borders : 0;
+
+      list.style.maxHeight =
+        `${Math.ceil(fourth.bottom - first.top + extra)}px`;
+    }
+
+    function scheduleFit() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fitFourActivities);
+    }
+
+    const observer = new ResizeObserver(scheduleFit);
+
+    Array.from(list.children)
+      .slice(0, 4)
+      .forEach((row) => observer.observe(row));
+
+    scheduleFit();
+    document.fonts?.ready.then(scheduleFit);
+  })();
 </script>

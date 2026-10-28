@@ -47,11 +47,26 @@ const emailSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["draft", "pending_confirmation", "sent", "failed"],
+      enum: [
+        "draft",
+        "pending_confirmation",
+        "scheduled",
+        "sending",
+        "sent",
+        "failed",
+      ],
       default: "draft",
     },
 
     sentAt: {
+      type: Date,
+    },
+    scheduledAt: {
+      type: Date,
+      index: true,
+    },
+
+    sendingAt: {
       type: Date,
     },
 

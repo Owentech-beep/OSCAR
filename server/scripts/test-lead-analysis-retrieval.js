@@ -1,141 +1,95 @@
 import dns from "node:dns";
-
 dns.setServers(["1.1.1.1"]);
 
 import mongoose from "mongoose";
 import { env } from "../config/env.js";
-import { User } from "../models/User.js";
 import Lead from "../models/Lead.js";
 import LeadAnalysis from "../models/LeadAnalysis.js";
 import { getLeadAnalysis } from "../services/lead-analysis.service.js";
 
-await mongoose.connect(env.MONGODB_URI, {
-  serverSelectionTimeoutMS: 60000,
-  connectTimeoutMS: 60000,
-});
+try {
+  await mongoose.connect(env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 60000,
+    connectTimeoutMS: 60000,
+  });
 
-console.log("MongoDB connected for test.");
+  console.log("MongoDB connected for test.");
 
-const testUser = await User.findOne();
+  const lead = await Lead.findOne({
+    companyName: "OwenTech Test",
+  });
 
-if (!testUser) {
-  throw new Error("No user found in the database.");
-}
-
-console.log("Using test user:", testUser.email);
-
-const lead = await Lead.findOne({
-  companyName: "OwenTech Test",
-});
-
-if (!lead) {
-  throw new Error("OwenTech Test lead was not found.");
-}
-
-console.log("\nTEST LEAD FOUND:");
-
-console.dir(
-  {
-    id: lead._id.toString(),
-    companyName: lead.companyName,
-    contactName: lead.contactName,
-    email: lead.email,
-  },
-  { depth: null }
-);
-
-// Create temporary analysis
-const testAnalysis = await LeadAnalysis.findOneAndUpdate(
-  { lead: lead._id },
-  {
-    lead: lead._id,
-    score: 85,
-    qualification: "High Potential",
-    reasoning:
-      "Temporary automated test analysis. Strong technology profile and clear business contact information.",
-    strengths: [
-      "Technology industry",
-      "Valid business email",
-      "Identified contact",
-    ],
-    concerns: [
-      "No previous contact recorded",
-    ],
-    recommendedAction:
-      "Contact the lead with a personalized introduction.",
-    analyzedAt: new Date(),
-    model: "test-model",
-  },
-  {
-    new: true,
-    upsert: true,
-    runValidators: true,
+  if (!lead) {
+    throw new Error("OwenTech Test lead was not found.");
   }
-);
 
-console.log("\nTEST ANALYSIS CREATED:");
+  console.log("Test lead found:", lead.companyName);
 
-console.dir(
-  {
-    id: testAnalysis._id.toString(),
-    lead: lead._id.toString(),
-    score: testAnalysis.score,
-    qualification: testAnalysis.qualification,
-    model: testAnalysis.model,
-  },
-  { depth: null }
-);
+  const expectedAnalysis = await LeadAnalysis.findOne({
+    lead: lead._id,
+  }).lean();
 
-// Retrieve through the actual service
-const analysis = await getLeadAnalysis(lead._id.toString());
+  if (!expectedAnalysis) {
+    throw new Error(
+      "No existing analysis found for OwenTech Test. " +
+      "This test requires an existing analysis and will not create one."
+    );
+  }
 
-if (!analysis) {
-  throw new Error("Lead analysis retrieval failed.");
+  const analysis = await getLeadAnalysis(lead._id.toString());
+
+  if (!analysis) {
+    throw new Error("Lead analysis retrieval failed.");
+  }
+
+  const retrievedLeadId =
+    analysis.lead?._id?.toString() ??
+    analysis.lead?.toString();
+
+  if (retrievedLeadId !== lead._id.toString()) {
+    throw new Error("Lead ID verification failed.");
+  }
+
+  if (analysis.score !== expectedAnalysis.score) {
+    throw new Error("Analysis score does not match the stored record.");
+  }
+
+  if (analysis.qualification !== expectedAnalysis.qualification) {
+    throw new Error(
+      "Analysis qualification does not match the stored record."
+    );
+  }
+
+  if (analysis.model !== expectedAnalysis.model) {
+    throw new Error("Analysis model does not match the stored record.");
+  }
+
+  if (!analysis.lead?.companyName) {
+    throw new Error("Lead population failed.");
+  }
+
+  console.log("\nRETRIEVED ANALYSIS:");
+
+  console.dir(
+    {
+      companyName: analysis.lead.companyName,
+      leadId: retrievedLeadId,
+      score: analysis.score,
+      qualification: analysis.qualification,
+      model: analysis.model,
+      analyzedAt: analysis.analyzedAt,
+    },
+    { depth: null }
+  );
+
+  console.log("\nLEAD ANALYSIS RETRIEVAL TEST PASSED.");
+} catch (error) {
+  console.error("\nLEAD ANALYSIS RETRIEVAL TEST FAILED:");
+  console.error(error);
+  process.exitCode = 1;
+} finally {
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+    console.log("Test database connection closed.");
+  }
 }
-
-console.log("\nSERVICE RESULT:");
-
-console.dir(
-  {
-    leadId:
-      analysis.lead?._id?.toString() ??
-      analysis.lead?.toString(),
-
-    score: analysis.score,
-    qualification: analysis.qualification,
-    reasoning: analysis.reasoning,
-    strengths: analysis.strengths,
-    concerns: analysis.concerns,
-    recommendedAction: analysis.recommendedAction,
-    model: analysis.model,
-  },
-  { depth: null }
-);
-
-// Verify
-if (
-  analysis.score !== 85 ||
-  analysis.qualification !== "High Potential" ||
-  analysis.model !== "test-model"
-) {
-  throw new Error("Lead analysis verification failed.");
-}
-
-const retrievedLeadId =
-  analysis.lead?._id?.toString() ??
-  analysis.lead?.toString();
-
-if (retrievedLeadId !== lead._id.toString()) {
-  throw new Error("Lead ID verification failed.");
-}
-
-console.log("\n🔥 LEAD ANALYSIS RETRIEVAL TEST PASSED.");
-
-// Clean up temporary analysis
-await LeadAnalysis.findByIdAndDelete(testAnalysis._id);
-
-console.log("TEST ANALYSIS CLEANED UP.");
-
-await mongoose.disconnect();
-
-console.log("Test database connection closed.");

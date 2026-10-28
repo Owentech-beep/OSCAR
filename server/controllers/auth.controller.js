@@ -1,5 +1,6 @@
 import { authenticateUser } from "../services/auth.service.js";
 import { writeAuditLog } from "../services/audit.service.js";
+import crypto from "node:crypto";
 
 export function showLogin(req, res) {
   if (req.session.user) {
@@ -40,6 +41,7 @@ export async function login(req, res, next) {
     });
 
     req.session.user = user;
+    req.session.csrfToken = crypto.randomBytes(32).toString("hex");
 
     await writeAuditLog({
       actorUser: user.id,

@@ -9,3 +9,10 @@ logs/
 *.log
 .vscode/
 .idea/
+
+# Generated frontend build metadata
+public/oscar-brain/.vite/
+
+# Local test output
+/tmp/
+/invoice-preview-*.pdf

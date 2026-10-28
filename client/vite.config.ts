@@ -9,10 +9,11 @@ export default defineConfig({
 
   build: {
     outDir: path.resolve(
-      __dirname,
-      "../public/oscar-brain",
+      __dirname, 
+      "../public/oscar-brain"
     ),
     emptyOutDir: true,
+    manifest: true,
   },
 
   server: {

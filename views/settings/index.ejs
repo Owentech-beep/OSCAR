@@ -1,0 +1,175 @@
+<main class="container-fluid px-3 px-lg-5 py-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <span class="eyebrow">OSCAR CONFIGURATION</span>
+      <h1 class="h3 text-light mb-1">Settings</h1>
+      <p class="text-secondary mb-0">
+        Manage your business details and view your account.
+      </p>
+    </div>
+
+    <a href="/dashboard" class="btn btn-outline-light">
+      <i class="bi bi-arrow-left me-2"></i>Back to dashboard
+    </a>
+  </div>
+
+  <% if (saved) { %>
+    <div class="alert alert-success" role="status">
+      Business settings saved successfully.
+    </div>
+  <% } %>
+
+  <% if (errorMessage) { %>
+    <div class="alert alert-danger" role="alert">
+      <%= errorMessage %>
+    </div>
+  <% } %>
+
+  <div class="row g-4">
+    <div class="col-12 col-xl-8">
+      <section class="glass-card p-4">
+        <h2 class="h5 text-light">Business details</h2>
+        <p class="text-secondary">
+          These details appear on newly generated invoice PDFs.
+        </p>
+
+        <% if (!canManageSettings) { %>
+          <div class="alert alert-info">
+            Only owners and admins can edit these details.
+          </div>
+        <% } %>
+
+        <form action="/settings/business" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <fieldset <%= canManageSettings ? "" : "disabled" %>>
+            <legend class="visually-hidden">Business contact details</legend>
+
+            <div class="row g-3">
+              <div class="col-12">
+                <label for="businessName" class="form-label text-light">
+                  Business name
+                </label>
+                <input
+                  id="businessName"
+                  name="name"
+                  class="form-control"
+                  value="<%= business.name %>"
+                  maxlength="150"
+                  autocomplete="organization"
+                  required
+                >
+              </div>
+
+              <div class="col-md-6">
+                <label for="businessEmail" class="form-label text-light">
+                  Business email
+                </label>
+                <input
+                  id="businessEmail"
+                  name="email"
+                  type="email"
+                  class="form-control"
+                  value="<%= business.email %>"
+                  maxlength="254"
+                  autocomplete="email"
+                >
+              </div>
+
+              <div class="col-md-6">
+                <label for="businessPhone" class="form-label text-light">
+                  Phone
+                </label>
+                <input
+                  id="businessPhone"
+                  name="phone"
+                  type="tel"
+                  class="form-control"
+                  value="<%= business.phone %>"
+                  maxlength="50"
+                  autocomplete="tel"
+                >
+              </div>
+
+              <div class="col-12">
+                <label for="businessWebsite" class="form-label text-light">
+                  Website
+                </label>
+                <input
+                  id="businessWebsite"
+                  name="website"
+                  type="url"
+                  class="form-control"
+                  value="<%= business.website %>"
+                  maxlength="500"
+                  placeholder="https://example.com"
+                  autocomplete="url"
+                >
+              </div>
+
+              <div class="col-12">
+                <label for="businessAddress" class="form-label text-light">
+                  Business address
+                </label>
+                <textarea
+                  id="businessAddress"
+                  name="address"
+                  class="form-control"
+                  rows="3"
+                  maxlength="500"
+                  autocomplete="street-address"
+                ><%= business.address %></textarea>
+              </div>
+            </div>
+
+            <% if (canManageSettings) { %>
+              <button type="submit" class="btn btn-oscar mt-4">
+                <i class="bi bi-check2 me-2"></i>Save business details
+              </button>
+            <% } %>
+          </fieldset>
+        </form>
+      </section>
+    </div>
+
+    <div class="col-12 col-xl-4">
+      <section class="glass-card p-4 mb-4">
+        <h2 class="h5 text-light">Your account</h2>
+
+        <dl class="mb-0">
+          <dt class="text-secondary mt-3">Name</dt>
+          <dd class="text-light"><%= account.name %></dd>
+
+          <dt class="text-secondary">Email</dt>
+          <dd class="text-light text-break"><%= account.email %></dd>
+
+          <dt class="text-secondary">Role</dt>
+          <dd class="text-light text-capitalize"><%= account.role %></dd>
+        </dl>
+      </section>
+
+      <section class="glass-card p-4">
+        <h2 class="h5 text-light">Integrations</h2>
+
+        <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
+          <span class="text-light">AI chat and voice</span>
+          <span class="badge <%= integrations.aiConfigured ? 'bg-success' : 'bg-secondary' %>">
+            <%= integrations.aiConfigured ? "Configured" : "Not configured" %>
+          </span>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
+          <span class="text-light">Email provider</span>
+          <span class="badge <%= integrations.emailConfigured ? 'bg-success' : 'bg-secondary' %>">
+            <%= integrations.emailConfigured ? "Configured" : "Not configured" %>
+          </span>
+        </div>
+
+        <p class="small text-secondary mt-3 mb-0">
+          Configuration status does not verify connectivity.
+          AI can be activated after the build is complete.
+        </p>
+      </section>
+    </div>
+  </div>
+</main>

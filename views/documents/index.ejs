@@ -1,0 +1,228 @@
+<main class="container-fluid px-3 px-lg-5 py-4">
+  <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <span class="eyebrow">AGENCY FILES</span>
+      <h1 class="h3 text-light mb-1">Documents</h1>
+      <p class="text-secondary mb-0">
+        Shared agency files · <%= total %> matching documents
+      </p>
+    </div>
+
+    <a href="/dashboard" class="btn btn-outline-light">
+      Back to dashboard
+    </a>
+  </header>
+
+  <div id="documentAlert" class="alert d-none" role="alert"></div>
+  <input id="documentCsrf" type="hidden" value="<%= csrfToken %>">
+
+  <% if (canManageDocuments) { %>
+    <section class="glass-card p-4 mb-4">
+      <h2 class="h5 text-light">Upload a document</h2>
+      <p class="text-secondary small">
+        PDF, PNG, or JPEG · Maximum 10 MB per file
+      </p>
+
+      <form id="documentUploadForm" class="row g-3 align-items-end">
+        <div class="col-12 col-md-9">
+          <label for="documentFile" class="form-label text-light">
+            Select file
+          </label>
+          <input
+            id="documentFile"
+            name="document"
+            type="file"
+            class="form-control"
+            accept=".pdf,.png,.jpg,.jpeg"
+            required
+          >
+        </div>
+        <div class="col-12 col-md-3">
+          <button id="uploadDocumentButton" class="btn btn-oscar w-100" type="submit">
+            Upload
+          </button>
+        </div>
+      </form>
+    </section>
+  <% } %>
+
+  <section class="glass-card p-4">
+    <form action="/documents" method="GET" class="d-flex gap-2 mb-4">
+      <label for="documentSearch" class="visually-hidden">
+        Search filenames
+      </label>
+      <input
+        id="documentSearch"
+        name="search"
+        type="search"
+        class="form-control"
+        placeholder="Search filenames..."
+        maxlength="100"
+        value="<%= search %>"
+      >
+      <button class="btn btn-oscar" type="submit">Search</button>
+      <% if (search) { %>
+        <a href="/documents" class="btn btn-outline-light">Clear</a>
+      <% } %>
+    </form>
+
+    <% if (!documents.length) { %>
+      <p class="text-secondary mb-0">
+        <%= search ? "No documents match your search." : "No documents uploaded yet." %>
+      </p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Filename</th>
+              <th scope="col">Size</th>
+              <th scope="col">Uploaded</th>
+              <th scope="col" class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% documents.forEach((document) => { %>
+              <tr>
+                <td class="text-break"><%= document.filename %></td>
+                <td class="text-nowrap">
+                  <%= (document.length / 1024).toFixed(1) %> KB
+                </td>
+                <td class="text-nowrap">
+                  <%= new Date(document.uploadDate).toLocaleDateString("en-ZA", {
+                    timeZone: "Africa/Johannesburg"
+                  }) %>
+                </td>
+                <td>
+                  <div class="d-flex justify-content-end gap-2">
+                    <a
+                      href="/api/documents/<%= document._id %>/download"
+                      class="btn btn-sm btn-outline-info"
+                    >Download</a>
+
+                    <% if (canManageDocuments) { %>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-delete-document="<%= document._id %>"
+                        data-filename="<%= document.filename %>"
+                      >Delete</button>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
+      <span class="text-secondary">Page <%= page %> of <%= totalPages %></span>
+
+      <div class="d-flex gap-2">
+        <% if (page > 1) { %>
+          <a
+            class="btn btn-sm btn-outline-light"
+            href="/documents?page=<%= page - 1 %>&search=<%= encodeURIComponent(search) %>"
+          >Previous</a>
+        <% } %>
+        <% if (page < totalPages) { %>
+          <a
+            class="btn btn-sm btn-outline-light"
+            href="/documents?page=<%= page + 1 %>&search=<%= encodeURIComponent(search) %>"
+          >Next</a>
+        <% } %>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  (() => {
+    const token = document.getElementById("documentCsrf").value;
+    const alertBox = document.getElementById("documentAlert");
+    const form = document.getElementById("documentUploadForm");
+
+    function showError(message) {
+      alertBox.className = "alert alert-danger";
+      alertBox.textContent = message;
+      alertBox.scrollIntoView({ block: "nearest" });
+    }
+
+    async function request(url, options) {
+      const response = await fetch(url, {
+        ...options,
+        credentials: "same-origin",
+        headers: {
+          "x-csrf-token": token,
+        },
+      });
+
+      if (response.redirected) {
+        throw new Error("Your session may have expired. Refresh and sign in.");
+      }
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.success) {
+        throw new Error(
+          result?.error || `Request failed (${response.status}).`,
+        );
+      }
+
+      return result;
+    }
+
+    form?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const button = document.getElementById("uploadDocumentButton");
+      const file = document.getElementById("documentFile").files[0];
+
+      if (!file) return;
+
+      if (file.size > 10 * 1024 * 1024) {
+        showError("The file exceeds the 10 MB limit.");
+        return;
+      }
+
+      const body = new FormData();
+      body.append("document", file);
+
+      button.disabled = true;
+      button.textContent = "Uploading...";
+
+      try {
+        await request("/api/documents", { method: "POST", body });
+        window.location.assign("/documents");
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Upload";
+      }
+    });
+
+    document.querySelectorAll("[data-delete-document]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        if (!window.confirm(
+          `Permanently delete "${button.dataset.filename}"?`,
+        )) return;
+
+        button.disabled = true;
+
+        try {
+          await request(
+            `/api/documents/${encodeURIComponent(button.dataset.deleteDocument)}`,
+            { method: "DELETE" },
+          );
+          window.location.reload();
+        } catch (error) {
+          showError(error.message);
+          button.disabled = false;
+        }
+      });
+    });
+  })();
+</script>

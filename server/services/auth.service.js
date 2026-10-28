@@ -23,6 +23,7 @@ export async function authenticateUser(email, password) {
     id: user._id.toString(),
     name: user.name,
     email: user.email,
-    role: user.role
+    role: user.role,
+    active: user.active
   };
 }

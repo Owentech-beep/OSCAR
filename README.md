@@ -444,13 +444,12 @@ Execute
    ▼
 Audit Log
 
-License
-
+License:
 This project is proprietary software developed for OwenTech.
 
 Unauthorized copying, redistribution, or commercial use is not permitted without permission from the project owner.
 
-Author
+Author:
 OwenTech
 
 AI Agency Operating System

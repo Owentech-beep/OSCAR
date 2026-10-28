@@ -40,7 +40,12 @@ export const confirmActionController = async (req, res, next) => {
       });
     }
 
-    const result = await executeConfirmedAction(confirmation, req);
+    const result = await executeConfirmedAction(confirmation, {
+      userId: req.session.user.id,
+      role: req.session.user.role,
+      active: req.session.user.active,
+      req,
+    });
 
     return res.status(200).json({
       success: result.success,

@@ -3,6 +3,11 @@ import oscarAgent from "../agents/oscar.agent.js";
 import { env } from "../config/env.js";
 import { getOscarBusinessContext } from "./oscar-context.service.js";
 import { getConversation, addMessage } from "./oscar-memory.service.js";
+import { oscarEvents } from "./oscar-events.service.js";
+import {
+  extractOscarConfirmation,
+  extractOscarResponse,
+} from "./oscar-result.service.js";
 
 export const runOscar = async (message, context = {}) => {
   const { userId } = context;
@@ -11,6 +16,9 @@ export const runOscar = async (message, context = {}) => {
     throw new Error("OSCAR user context is missing.");
   }
 
+  oscarEvents.emitStart(userId);
+  oscarEvents.emitThinking(userId);
+
   if (!env.OPENAI_API_KEY) {
     const error = new Error(
       "OSCAR AI is not configured. Please add OPENAI_API_KEY.",
@@ -18,41 +26,52 @@ export const runOscar = async (message, context = {}) => {
 
     error.statusCode = 503;
 
+    oscarEvents.emitOffline(userId);
+
     throw error;
   }
 
-  addMessage(userId, "user", message);
+  try {
+    addMessage(userId, "user", message);
 
-  const conversation = getConversation(userId);
+    const conversation = getConversation(userId);
 
-  const businessContext = await getOscarBusinessContext();
+    const businessContext = await getOscarBusinessContext();
 
-  const conversationText = conversation
-    .map((item) => `${item.role.toUpperCase()}: ${item.content}`)
-    .join("\n");
-  const agentContext = {
-    ...context,
-    business: businessContext,
-  };
-  const result = await run(oscarAgent, conversationText, {
-    context: agentContext,
-  });
+    const conversationText = conversation
+      .map((item) => `${item.role.toUpperCase()}: ${item.content}`)
+      .join("\n");
 
-  const response = result.finalOutput;
+    const agentContext = {
+      ...context,
+      business: businessContext,
+    };
 
-  addMessage(userId, "assistant", response);
+    const result = await run(oscarAgent, conversationText, {
+      context: agentContext,
+    });
 
-  const confirmationItem = [...result.newItems]
-    .reverse()
-    .find(
-      (item) =>
-        item.type === "tool_call_output_item" &&
-        item.output?.requiresConfirmation === true &&
-        item.output?.confirmation,
-    );
+    const response = extractOscarResponse(result);
 
-  return {
-    response,
-    confirmation: confirmationItem?.output?.confirmation ?? null,
-  };
+    addMessage(userId, "assistant", response);
+
+    const confirmation = extractOscarConfirmation(result);
+
+    if (confirmation) {
+      oscarEvents.emitConfirmationRequired(
+        userId,
+        confirmation,
+      );
+    } else {
+      oscarEvents.emitSuccess(userId);
+    }
+
+    return {
+      response,
+      confirmation,
+    };
+  } catch (error) {
+    oscarEvents.emitError(userId, error);
+    throw error;
+  }
 };

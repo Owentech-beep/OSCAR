@@ -10,14 +10,11 @@ const ROLE_PERMISSIONS = {
     "manage_calendar",
     "manage_email",
     "view_analytics",
+    "manage_memory",
+    "manage_invoices",
   ]),
 
-  staff: new Set([
-    "read",
-    "manage_leads",
-    "manage_tasks",
-    "manage_calendar",
-  ]),
+  staff: new Set(["read", "manage_leads", "manage_tasks", "manage_calendar"]),
 };
 
 const ACTION_PERMISSIONS = {
@@ -27,10 +24,15 @@ const ACTION_PERMISSIONS = {
   get_revenue: "view_analytics",
   generate_business_report: "view_analytics",
   get_clients: "read",
+  get_client: "read",
   get_leads: "read",
   get_projects: "read",
   get_tasks: "read",
   get_calendar_events: "read",
+  get_email_statistics: "read",
+  get_website_audit: "read",
+  search_memory: "read",
+  get_invoices: "read",
 
   // Leads
   create_lead: "manage_leads",
@@ -39,6 +41,7 @@ const ACTION_PERMISSIONS = {
   analyze_lead: "manage_leads",
   search_leads: "read",
   get_lead_analysis: "read",
+  analyze_website: "manage_leads",
 
   // Clients
   create_client: "manage_clients",
@@ -55,6 +58,9 @@ const ACTION_PERMISSIONS = {
   update_task: "manage_tasks",
   delete_task: "manage_tasks",
 
+  //memory
+  save_memory: "manage_memory",
+
   // Calendar
   create_calendar_event: "manage_calendar",
   update_calendar_event: "manage_calendar",
@@ -62,6 +68,16 @@ const ACTION_PERMISSIONS = {
 
   // Email
   send_email: "manage_email",
+  schedule_email: "manage_email",
+  generate_email: "manage_email",
+  create_email_draft: "manage_email",
+
+  // Invoices
+  create_invoice: "manage_invoices",
+  update_invoice: "manage_invoices",
+  mark_invoice_sent: "manage_invoices",
+  mark_invoice_paid: "manage_invoices",
+  cancel_invoice: "manage_invoices",
 };
 
 export function getRequiredPermission(action) {
@@ -95,7 +111,7 @@ export function canPerformAction(user, action) {
 export function assertCanPerformAction(user, action) {
   if (!canPerformAction(user, action)) {
     const error = new Error(
-      `User is not authorized to perform action: ${action}`
+      `User is not authorized to perform action: ${action}`,
     );
 
     error.statusCode = 403;

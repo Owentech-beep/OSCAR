@@ -29,12 +29,14 @@ import { updateTaskTool } from "./update-task.tool.js";
 import { deleteTaskTool } from "./delete-task.tool.js";
 import { getRevenueTool } from "./get-revenue.tool.js";
 import { generateBusinessReportTool } from "./generate-business-report.tool.js";
+import { getInvoicesTool } from "./get-invoices.tool.js";
 
 export const oscarTools = [
   analyzeLeadTool,
   getLeadAnalysisTool,
   getLeadsTool,
   searchLeadsTool,
+  getInvoicesTool,
   getBusinessMetricsTool,
   getBusinessContextTool,
   analyzeWebsiteTool,
@@ -50,6 +52,7 @@ export const oscarTools = [
   updateCalendarEventTool,
   deleteCalendarEventTool,
   getClientsTool,
+  createClientTool,
   getProjectsTool,
   getTasksTool,
   updateClientTool,
@@ -60,7 +63,6 @@ export const oscarTools = [
   createTaskTool,
   updateTaskTool,
   deleteTaskTool,
-  getRevenueTool,
   getRevenueTool,
   generateBusinessReportTool,
 ];

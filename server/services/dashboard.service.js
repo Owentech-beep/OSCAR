@@ -3,6 +3,7 @@ import { User } from "../models/User.js";
 import Lead from "../models/Lead.js";
 import Email from "../models/Email.js";
 import Client from "../models/Client.js";
+import { ActivityLog } from "../models/ActivityLog.js";
 
 export async function getDashboardMetrics() {
   const latest = await BusinessMetric.findOne().sort({ date: -1 }).lean();
@@ -59,4 +60,22 @@ export async function getRevenueHistory(days = 30) {
     .sort({ date: 1 })
     .select("date revenue")
     .lean();
+}
+
+export async function getRecentActivity(limit = 8) {
+  const activities = await ActivityLog.find({})
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .populate("actorUser", "name email")
+    .lean();
+
+  return activities.map((activity) => ({
+    id: activity._id.toString(),
+    action: activity.action,
+    resourceType: activity.resourceType,
+    resourceId: activity.resourceId ?? null,
+    actor: activity.actorUser?.name ?? activity.actorUser?.email ?? "System",
+    metadata: activity.metadata ?? {},
+    createdAt: activity.createdAt,
+  }));
 }

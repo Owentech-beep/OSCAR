@@ -1,3 +1,9 @@
+<input
+  type="hidden"
+  id="csrfToken"
+  name="_csrf"
+  value="<%= csrfToken %>"
+>
 <div class="container-fluid py-4">
   <!-- Back -->
   <div class="mb-4">
@@ -400,8 +406,11 @@
     `;
 
       try {
-        const response = await fetch(`/api/leads/${leadId}`, {
+      const response = await fetch(`/api/leads/${leadId}`, {
           method: "DELETE",
+          headers: {
+            "x-csrf-token": document.getElementById("csrfToken").value,
+          },
         });
 
         const result = await response.json();
@@ -446,9 +455,12 @@
     `;
 
       try {
-        const response = await fetch(`/api/leads/${leadId}/analyze`, {
+       const response = await fetch(`/api/leads/${leadId}/analyze`, {
           method: "POST",
           credentials: "same-origin",
+          headers: {
+            "x-csrf-token": document.getElementById("csrfToken").value,
+          },
         });
 
         const result = await response.json();

@@ -1,0 +1,171 @@
+<%
+  const number = (value) => Number(value).toLocaleString("en-ZA");
+
+  const amount = (value) => Number(value).toLocaleString("en-ZA", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  const cards = [
+    ["Total leads", number(analytics.totalLeads), "All recorded leads"],
+    ["Active clients", number(analytics.activeClients),
+      `${number(analytics.totalClients)} clients in total`],
+    ["Total invoices", number(analytics.totalInvoices), "All stored statuses"],
+    ["Won lead share",
+      analytics.wonShare === null
+        ? "No data"
+        : `${analytics.wonShare.toFixed(1)}%`,
+      "Won leads divided by all leads"]
+  ];
+%>
+
+<main class="container-fluid px-3 px-lg-5 py-4">
+  <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <span class="eyebrow">BUSINESS PERFORMANCE</span>
+      <h1 class="h3 text-light mb-1">Analytics</h1>
+      <p class="text-secondary mb-0">
+        Current database overview · All recorded data
+      </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+      <a href="/analytics" class="btn btn-oscar">
+        <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+      </a>
+      <a href="/dashboard" class="btn btn-outline-light">
+        Back to dashboard
+      </a>
+    </div>
+  </header>
+
+  <div class="row g-3 mb-4">
+    <% cards.forEach(([label, value, description]) => { %>
+      <div class="col-12 col-sm-6 col-xl-3">
+        <section class="glass-card p-4 h-100">
+          <h2 class="h6 text-secondary"><%= label %></h2>
+          <div class="h3 text-light"><%= value %></div>
+          <p class="small text-secondary mb-0"><%= description %></p>
+        </section>
+      </div>
+    <% }) %>
+  </div>
+
+  <section class="glass-card p-4 mb-4">
+    <h2 class="h5 text-light">Invoice amounts by currency and status</h2>
+    <p class="small text-secondary">
+      Amounts include invoice tax. Paid means marked paid in OSCAR;
+      it is not a bank reconciliation. Different currencies are kept separate.
+    </p>
+
+    <% if (!analytics.invoices.length) { %>
+      <p class="text-secondary mb-0">
+        No invoices recorded yet.
+        <a href="/invoices">Open invoices</a> to create your first draft.
+      </p>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0">
+          <caption class="visually-hidden">
+            Invoice counts and amounts grouped by currency and stored status
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Currency</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="text-end">Invoices</th>
+              <th scope="col" class="text-end">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% analytics.invoices.forEach((row) => { %>
+              <tr>
+                <td><%= row.currency %></td>
+                <td><%= row.status %></td>
+                <td class="text-end"><%= number(row.count) %></td>
+                <td class="text-end text-nowrap"><%= amount(row.amount) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+
+    <p class="small text-secondary mt-3 mb-0">
+      Draft and cancelled amounts are shown separately.
+      Overdue refers to stored status, not a fresh due-date calculation.
+    </p>
+  </section>
+
+  <div class="row g-4">
+    <div class="col-12 col-lg-6">
+      <section class="glass-card p-4 h-100">
+        <h2 class="h5 text-light">Lead stages</h2>
+        <p class="small text-secondary">Current status of every recorded lead.</p>
+
+        <% if (!analytics.leadStages.length) { %>
+          <p class="text-secondary mb-0">No leads recorded yet.</p>
+        <% } else { %>
+          <% analytics.leadStages.forEach((row) => {
+            const percentage = analytics.totalLeads
+              ? (row.count / analytics.totalLeads) * 100
+              : 0;
+          %>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between gap-3 mb-1">
+                <span class="text-light"><%= row.status %></span>
+                <span class="text-secondary">
+                  <%= number(row.count) %> · <%= percentage.toFixed(1) %>%
+                </span>
+              </div>
+              <progress
+                class="w-100"
+                max="<%= analytics.totalLeads %>"
+                value="<%= row.count %>"
+                aria-label="<%= row.status %> share of leads"
+              ><%= percentage.toFixed(1) %>%</progress>
+            </div>
+          <% }) %>
+        <% } %>
+      </section>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <section class="glass-card p-4 h-100">
+        <h2 class="h5 text-light">Outbound email status</h2>
+        <p class="small text-secondary">
+          Sent records provider acceptance, not inbox delivery.
+          Sending may include attempts awaiting delivery review.
+        </p>
+
+        <% if (!analytics.emailStatuses.length) { %>
+          <p class="text-secondary">No outbound emails recorded yet.</p>
+        <% } else { %>
+          <ul class="list-unstyled mb-3">
+            <% analytics.emailStatuses.forEach((row) => { %>
+              <li class="d-flex justify-content-between gap-3 border-bottom py-2">
+                <span class="text-light text-capitalize"><%= row.status %></span>
+                <strong class="text-light"><%= number(row.count) %></strong>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+
+        <p class="text-secondary mb-0">
+          Recorded inbound emails:
+          <strong class="text-light"><%= number(analytics.inboundEmails) %></strong>
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <p class="small text-secondary mt-4">
+    Updated:
+    <%= new Date(analytics.generatedAt).toLocaleString("en-ZA", {
+      timeZone: "Africa/Johannesburg",
+      dateStyle: "medium",
+      timeStyle: "short"
+    }) %>
+    SAST. Includes test records stored in your database.
+  </p>
+</main>
