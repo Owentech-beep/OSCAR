@@ -1,6 +1,6 @@
 export async function executeConfirmedEmail(
   payload,
-  { Email, sendEmail, markEmailAsSent },
+  { Email, sendEmail, markEmailAsSent, assertEmailConfigured },
 ) {
   const action = "send_email";
   const { emailId, approvedEmail } = payload;
@@ -30,6 +30,9 @@ export async function executeConfirmedEmail(
         "Review the draft and request a new confirmation.",
     );
   }
+
+  // Configuration errors must not move the draft into sending.
+  assertEmailConfigured();
 
   const claimedEmail = await Email.findOneAndUpdate(
     {
@@ -65,10 +68,7 @@ export async function executeConfirmedEmail(
     body: approvedEmail.body,
   });
 
-  const sentEmail = await markEmailAsSent(
-    emailId,
-    providerResult.messageId,
-  );
+  const sentEmail = await markEmailAsSent(emailId, providerResult.messageId);
 
   return {
     success: true,

@@ -24,7 +24,9 @@ function setup({ providerError, completionError } = {}) {
   let providerCalls = 0;
   let completionCalls = 0;
 
-  const dependencies = {
+    const dependencies = {
+    assertEmailConfigured: () => {},
+
     Email: {
       async findById(id) {
         assert.equal(id, record._id);
@@ -88,7 +90,7 @@ test("changed content is rejected before sending", async () => {
   const fixture = setup();
   fixture.record.body = "Changed after approval";
 
-  const result = await executeConfirmedEmail(
+   const result = await executeConfirmedEmail(
     fixture.payload,
     fixture.dependencies,
   );

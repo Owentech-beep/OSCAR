@@ -1,7 +1,10 @@
 import { createLead, updateLead, deleteLead } from "./lead.service.js";
 import { createClient } from "./client.service.js";
 import Email from "../models/Email.js";
-import { sendEmail } from "../integrations/email.provider.js";
+import {
+  sendEmail,
+  assertEmailConfigured,
+} from "../integrations/email.provider.js";
 import { markEmailAsSent } from "./email-send.service.js";
 import { writeAuditLog } from "./audit.service.js";
 import {
@@ -115,6 +118,7 @@ export async function executeConfirmedAction(confirmation, context = {}) {
           Email,
           sendEmail,
           markEmailAsSent,
+          assertEmailConfigured,
         });
         break;
       }

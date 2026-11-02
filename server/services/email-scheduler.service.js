@@ -1,6 +1,8 @@
 import { claimScheduledEmail } from "./email.service.js";
-
-import { sendEmail } from "../integrations/email.provider.js";
+import {
+  sendEmail,
+  isEmailConfigured,
+} from "../integrations/email.provider.js";
 import { markEmailAsSent } from "./email-send.service.js";
 import Email from "../models/Email.js";
 
@@ -8,7 +10,7 @@ let schedulerInterval = null;
 let isProcessing = false;
 
 async function processScheduledEmail() {
-  if (isProcessing) {
+  if (isProcessing || !isEmailConfigured()) {
     return;
   }
 
@@ -68,6 +70,11 @@ async function processScheduledEmail() {
 
 export function startEmailScheduler({ intervalMs = 30_000 } = {}) {
   if (schedulerInterval) {
+    return;
+  }
+
+  if (!isEmailConfigured()) {
+    console.log("Email scheduler paused: email provider is not configured.");
     return;
   }
 
