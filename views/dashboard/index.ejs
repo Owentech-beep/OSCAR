@@ -301,9 +301,34 @@
       </div>
 
       <div class="kpi-grid">
-        <%- include("../partials/kpi", { icon: "bi-currency-dollar", label:
-        "Revenue", value: metrics.revenue.toLocaleString("en-ZA", { style:
-        "currency", currency: "ZAR" }), trend: "Database" }) %>
+       <div class="kpi-card glass-card">
+          <div class="kpi-icon">
+            <i class="bi bi-cash-stack" aria-hidden="true"></i>
+          </div>
+
+          <div class="paid-invoice-kpi">
+            <div class="kpi-label">Paid invoices</div>
+
+            <% if (!metrics.paidInvoices.byCurrency.length) { %>
+              <div class="kpi-value">No paid invoices</div>
+            <% } else { %>
+              <% metrics.paidInvoices.byCurrency.forEach((group) => { %>
+                <div class="kpi-value">
+                  <%= group.currency %>
+                  <%= Number(group.amount).toLocaleString("en-ZA", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  }) %>
+                </div>
+              <% }) %>
+            <% } %>
+
+            <div class="kpi-trend">
+              <i class="bi bi-database" aria-hidden="true"></i>
+              <%= metrics.paidInvoices.count %> marked paid · Tax included
+            </div>
+          </div>
+        </div>
         <%- include("../partials/kpi", { icon: "bi-people", label:
         "Active Clients", value: metrics.activeClients, trend: "Database" })
         %>

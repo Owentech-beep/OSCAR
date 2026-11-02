@@ -4,46 +4,65 @@ import Lead from "../models/Lead.js";
 import Email from "../models/Email.js";
 import Client from "../models/Client.js";
 import { ActivityLog } from "../models/ActivityLog.js";
+import Invoice from "../models/Invoice.js";
 
 export async function getDashboardMetrics() {
-  const latest = await BusinessMetric.findOne().sort({ date: -1 }).lean();
+  const [
+    latest,
+    activeUsers,
+    activeClients,
+    potentialLeads,
+    emailsSent,
+    responses,
+    paidGroups,
+  ] = await Promise.all([
+    BusinessMetric.findOne().sort({ date: -1 }).lean(),
 
-  const [activeUsers, activeClients, potentialLeads, emailsSent, responses] =
-    await Promise.all([
-      User.countDocuments({ active: true }),
+    User.countDocuments({ active: true }),
 
-      Client.countDocuments({
-        status: "Active",
-      }),
+    Client.countDocuments({ status: "Active" }),
 
-      Lead.countDocuments({
-        status: { $nin: ["Won", "Lost"] },
-      }),
+    Lead.countDocuments({
+      status: { $nin: ["Won", "Lost"] },
+    }),
 
-      Email.countDocuments({
-        status: "sent",
-      }),
+    Email.countDocuments({ status: "sent" }),
 
-      Email.countDocuments({
-        direction: "inbound",
-      }),
-    ]);
+    Email.countDocuments({ direction: "inbound" }),
+
+    Invoice.aggregate([
+      { $match: { status: "Paid" } },
+      {
+        $group: {
+          _id: "$currency",
+          amount: { $sum: "$total" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+  ]);
+
   return {
+    // Existing snapshot fields retained for API compatibility.
     revenue: latest?.revenue ?? 0,
+    conversionRate: latest?.conversionRate ?? 0,
+    asOf: latest?.date ?? null,
 
     activeClients,
-
     potentialLeads,
-
     emailsSent,
-
     responses,
-
-    conversionRate: latest?.conversionRate ?? 0,
-
     activeUsers,
 
-    asOf: latest?.date ?? null,
+    paidInvoices: {
+      count: paidGroups.reduce((sum, group) => sum + group.count, 0),
+      byCurrency: paidGroups.map((group) => ({
+        currency: group._id || "Unknown",
+        amount: group.amount,
+        count: group.count,
+      })),
+    },
   };
 }
 

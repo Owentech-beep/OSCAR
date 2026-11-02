@@ -1769,8 +1769,8 @@ export function createMcpServer(principal) {
         authorize("search_memory");
 
         const memories = await searchMemory({
-          userId: principal.userId,
           ...input,
+          userId: principal.userId,
         });
 
         return success({
@@ -1799,9 +1799,9 @@ export function createMcpServer(principal) {
         authorize("save_memory");
 
         const memory = await saveMemory({
+          ...input,
           userId: principal.userId,
           source: "oscar",
-          ...input,
         });
 
         return success({

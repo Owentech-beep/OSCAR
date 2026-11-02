@@ -8,7 +8,7 @@ import { executeConfirmedAction } from "../services/confirmed-action.service.js"
 export const getConfirmationController = (req, res) => {
   const confirmation = getConfirmation(req.params.id);
 
-  if (!confirmation || confirmation.userId !== req.session.user.id) {
+  if (!confirmation || confirmation.userId !== req.oscarPrincipal.userId) {
     return res.status(404).json({
       success: false,
       error: "Confirmation not found or expired.",
@@ -30,7 +30,7 @@ export const confirmActionController = async (req, res, next) => {
   try {
     const confirmation = consumeConfirmation(
       req.params.id,
-      req.session.user.id,
+      req.oscarPrincipal.userId,
     );
 
     if (!confirmation) {
@@ -41,9 +41,7 @@ export const confirmActionController = async (req, res, next) => {
     }
 
     const result = await executeConfirmedAction(confirmation, {
-      userId: req.session.user.id,
-      role: req.session.user.role,
-      active: req.session.user.active,
+      ...req.oscarPrincipal,
       req,
     });
 
@@ -57,7 +55,10 @@ export const confirmActionController = async (req, res, next) => {
 };
 
 export const cancelActionController = (req, res) => {
-  const cancelled = cancelConfirmation(req.params.id, req.session.user.id);
+  const cancelled = cancelConfirmation(
+    req.params.id,
+    req.oscarPrincipal.userId,
+  );
 
   if (!cancelled) {
     return res.status(404).json({

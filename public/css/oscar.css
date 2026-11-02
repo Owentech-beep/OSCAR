@@ -1106,4 +1106,12 @@ input {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.paid-invoice-kpi {
+  min-width: 0;
+}
+
+.paid-invoice-kpi .kpi-value {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 

@@ -36,6 +36,10 @@ function App() {
       setBrainState("processing");
     });
 
+    socket.on("oscar:completed", () => {
+      setBrainState("warning");
+    });
+
     socket.on("oscar:confirmation_required", () => {
       setBrainState("warning");
     });

@@ -9,6 +9,7 @@ export const OSCAR_EVENTS = {
   SUCCESS: "oscar:success",
   ERROR: "oscar:error",
   OFFLINE: "oscar:offline",
+  COMPLETED: "oscar:completed",
 };
 
 class OscarEventService extends EventEmitter {
@@ -34,11 +35,20 @@ class OscarEventService extends EventEmitter {
     });
   }
 
-  emitToolResult(userId, tool, success = true) {
+  emitToolResult(userId, tool, success = null, status = null) {
+    const resolvedStatus =
+      status ??
+      (success === true
+        ? "completed"
+        : success === false
+          ? "failed"
+          : "unknown");
+
     this.emit(OSCAR_EVENTS.TOOL_RESULT, {
       userId,
       tool,
       success,
+      status: resolvedStatus,
       timestamp: new Date().toISOString(),
     });
   }
@@ -68,6 +78,13 @@ class OscarEventService extends EventEmitter {
 
   emitOffline(userId) {
     this.emit(OSCAR_EVENTS.OFFLINE, {
+      userId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  emitCompleted(userId) {
+    this.emit(OSCAR_EVENTS.COMPLETED, {
       userId,
       timestamp: new Date().toISOString(),
     });

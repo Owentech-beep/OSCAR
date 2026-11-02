@@ -30,6 +30,7 @@ import { deleteTaskTool } from "./delete-task.tool.js";
 import { getRevenueTool } from "./get-revenue.tool.js";
 import { generateBusinessReportTool } from "./generate-business-report.tool.js";
 import { getInvoicesTool } from "./get-invoices.tool.js";
+import { searchMemoryTool } from "./search-memory.tool.js";
 
 export const oscarTools = [
   analyzeLeadTool,
@@ -65,4 +66,5 @@ export const oscarTools = [
   deleteTaskTool,
   getRevenueTool,
   generateBusinessReportTool,
+  searchMemoryTool,
 ];

@@ -15,7 +15,10 @@ export const chatWithOscar = async (req, res, next) => {
       });
     }
 
-    const context = createToolContext(req);
+    const context = {
+      ...createToolContext(req),
+      ...req.oscarPrincipal,
+    };
 
     const result = await runOscar(message.trim(), context);
 
@@ -39,7 +42,7 @@ export const confirmOscarAction = async (req, res, next) => {
       });
     }
 
-    const userId = req.session.user.id;
+    const { userId } = req.oscarPrincipal;
 
     const confirmation = consumeConfirmation(confirmationId, userId);
 
@@ -51,14 +54,12 @@ export const confirmOscarAction = async (req, res, next) => {
     }
 
     const result = await executeConfirmedAction(confirmation, {
-      userId: req.session.user.id,
-      role: req.session.user.role,
-      active: req.session.user.active,
+      ...req.oscarPrincipal,
       req,
     });
 
     return res.status(200).json({
-      success: true,
+      success: result.success,
       data: result,
     });
   } catch (error) {
@@ -68,8 +69,7 @@ export const confirmOscarAction = async (req, res, next) => {
 
 export const createOscarVoiceSession = async (req, res, next) => {
   try {
-    const userId = req.session?.user?.id;
-
+    const userId = req.oscarPrincipal?.userId;
     if (!userId) {
       return res.status(401).json({
         success: false,
