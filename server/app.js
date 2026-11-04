@@ -151,6 +151,18 @@ app.set("views", path.join(rootDir, "views"));
 app.set("trust proxy", env.NODE_ENV === "production" ? 1 : 0);
 
 app.use(securityHeaders);
+
+// Deployment health check: no login or session required.
+app.get("/healthz", (req, res) => {
+  const databaseReady = mongoose.connection.readyState === 1;
+
+  res.setHeader("Cache-Control", "no-store");
+
+  return res.status(databaseReady ? 200 : 503).json({
+    status: databaseReady ? "ok" : "unavailable",
+  });
+});
+
 app.use(globalRateLimit);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json({ limit: "1mb" }));
