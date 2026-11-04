@@ -1,6 +1,13 @@
 import "dotenv/config";
 import { z } from "zod";
 
+const blankToUndefined = (value) => {
+  if (typeof value !== "string") return value;
+
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+};
+
 const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -11,7 +18,14 @@ const envSchema = z.object({
   SESSION_SECRET: z
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters"),
-  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_API_KEY: z.preprocess(blankToUndefined, z.string().optional()),
+
+  RESEND_API_KEY: z.preprocess(blankToUndefined, z.string().optional()),
+
+  RESEND_FROM_EMAIL: z.preprocess(
+    blankToUndefined,
+    z.string().email().optional(),
+  ),
   OPENAI_MODEL: z.string().default("gpt-5.6-luna"),
   OPENAI_REALTIME_MODEL: z.string().default("gpt-realtime"),
   OPENAI_REALTIME_VOICE: z.string().default("marin"),
@@ -21,8 +35,6 @@ const envSchema = z.object({
     .min(60)
     .max(600)
     .default(600),
-  RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
   MCP_PORT: z.coerce.number().int().positive().default(4000),
   MCP_AUTH_TOKEN: z
     .string()

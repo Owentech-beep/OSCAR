@@ -1,4 +1,6 @@
 import "dotenv/config";
+import mongoose from "mongoose";
+import { User } from "./models/User.js";
 import express from "express";
 import path from "node:path";
 import oscarRoutes from "./routes/oscar.routes.js";
@@ -64,7 +66,62 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
+
 io.engine.use(sessionMiddleware);
+
+io.use(async (socket, next) => {
+  try {
+    const userId = socket.request.session?.user?.id;
+
+    if (
+      typeof userId !== "string" ||
+      !mongoose.isValidObjectId(userId)
+    ) {
+      return next(new Error("Authentication required."));
+    }
+
+    const account = await User.findById(userId)
+      .select("_id role active")
+      .lean();
+
+    if (
+      !account ||
+      account.active !== true ||
+      !["owner", "admin", "staff"].includes(account.role)
+    ) {
+      return next(new Error("Your account cannot access OSCAR."));
+    }
+
+    socket.data.principal = {
+      userId: account._id.toString(),
+      role: account.role,
+    };
+
+    return next();
+  } catch (error) {
+    console.error("OSCAR socket account verification failed:", error);
+    return next(new Error("Unable to verify your account."));
+  }
+});
+
+initializeOscarSocket(io);
+
+io.on("connection", (socket) => {
+  const { userId } = socket.data.principal;
+
+  socket.join(`user:${userId}`);
+
+  console.log(
+    `OSCAR Socket connected: ${socket.id} → user:${userId}`,
+  );
+
+  socket.on("disconnect", (reason) => {
+    console.log(
+      `OSCAR Socket disconnected: ${socket.id} → ${reason}`,
+    );
+  });
+});
+
 initializeOscarSocket(io);
 
 io.on("connection", (socket) => {
