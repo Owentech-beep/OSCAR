@@ -28,7 +28,7 @@ const envSchema = z.object({
   ),
   OPENAI_MODEL: z.string().default("gpt-5.6-luna"),
   OPENAI_REALTIME_MODEL: z.string().default("gpt-realtime"),
-  OPENAI_REALTIME_VOICE: z.string().default("marin"),
+  OPENAI_REALTIME_VOICE: z.string().default("cedar"),
   OPENAI_REALTIME_SESSION_SECONDS: z.coerce
     .number()
     .int()
