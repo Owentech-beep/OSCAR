@@ -9,7 +9,12 @@ export const getBusinessMetricsTool = tool({
   description:
     "Retrieve the latest real business metrics from the CRM database, including revenue, active clients, potential leads, emails sent, responses, and conversion rate. Never invent business statistics.",
 
-  parameters: {},
+  parameters: {
+    type: "object",
+    properties: {},
+    required: [],
+    additionalProperties: false,
+  },
 
   async execute(_, runContext) {
     const context = requireToolContext(runContext);
