@@ -56,7 +56,7 @@
 
     </nav>
 
-   <div
+<div
     class="voice-panel"
     id="oscarSidebarVoice"
     data-configured="<%= voiceConfigured ? 'true' : 'false' %>"
@@ -86,7 +86,7 @@
       <%= voiceConfigured ? "" : "disabled" %>
     >
       <i class="bi bi-mic-fill me-2" aria-hidden="true"></i>
-      Start conversation
+      <span>Start conversation</span>
     </button>
 
     <div class="d-flex gap-2 mt-2">
@@ -96,19 +96,26 @@
         class="btn btn-sm btn-outline-light flex-fill"
         aria-pressed="false"
         disabled
-      >Mute</button>
+       aria-label="Mute microphone">Mute</button>
 
       <button
         id="sidebarVoiceEnd"
         type="button"
         class="btn btn-sm btn-outline-danger flex-fill"
         disabled
-      >End</button>
+       aria-label="End voice conversation">End</button>
     </div>
 
     <p class="small text-secondary mt-3 mb-0">
       Business actions still require their normal approvals.
     </p>
+    <button id="oscarVoiceActivityBtn" type="button"
+      class="btn btn-sm btn-outline-light w-100 mt-2"
+      aria-haspopup="dialog" aria-controls="oscarVoiceDialog"
+      aria-label="Open voice transcript and approvals" title="Voice transcript and approvals">
+      <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+      <span>Voice activity</span>
+    </button>
   </div>
 
   </aside>
@@ -217,7 +224,7 @@
             <div
               class="chat-header d-flex justify-content-between align-items-center">
 
-              <span>Chat with OSCAR</span>
+              <span>Text chat with OSCAR</span>
 
               <span class="status-pill" id="oscarChatStatus">
               <%= voiceConfigured ? "Configured" : "Not configured" %>
@@ -249,16 +256,6 @@
 
             <form id="oscarChatForm" class="chat-input">
 
-              <button
-                type="button"
-                id="oscarVoiceBtn"
-                class="oscar-send-btn"
-                title="Start voice conversation"
-                aria-label="Start voice conversation"
-                aria-pressed="false">
-                <i class="bi bi-mic-fill"></i>
-              </button>
-
               <input
                 id="oscarInput"
                 type="text"
@@ -282,22 +279,16 @@
 
             </form>
 
-            <div
-              id="oscarVoiceStatus"
-              class="small mt-2"
-              role="status"
-              aria-live="polite">
-              <%= voiceConfigured
-              ? "Voice conversation is off."
-              : "Voice will be available after AI setup is complete." %>
-            </div>
 
-            <audio id="oscarVoiceAudio" autoplay></audio>
 
           </div>
 
+
+
         </div>
         <!-- ================= END OSCAR CORE ================= -->
+
+
       </div>
 
       <div class="kpi-grid">
@@ -475,6 +466,41 @@
   </main>
 </div>
 
+
+<style>
+  #oscarVoiceDialog {
+    width: min(620px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: auto;
+    padding: 20px;
+    overflow-y: auto;
+    border: 1px solid var(--oscar-border);
+    border-radius: 14px;
+    background: var(--oscar-panel-2, #08142b);
+    color: var(--oscar-text, #eef5ff);
+  }
+  #oscarVoiceDialog::backdrop { background: rgba(0, 0, 0, 0.65); }
+  #oscarVoiceDialog .voice-dialog-heading {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  #oscarVoiceDialog #oscarVoiceMessages { min-height: 0; max-height: 40dvh; }
+  #oscarVoiceDialog .chat-message { overflow-wrap: anywhere; }
+</style>
+<dialog id="oscarVoiceDialog" aria-labelledby="oscarVoiceDialogTitle">
+  <div class="voice-dialog-heading">
+    <h2 id="oscarVoiceDialogTitle" class="h5 mb-0">OSCAR Voice activity</h2>
+    <form method="dialog">
+      <button type="submit" class="btn btn-sm btn-outline-light" aria-label="Close voice activity">Close</button>
+    </form>
+  </div>
+  <p class="small text-secondary mt-2">Voice transcript, sources and approvals. Closing this window keeps the call running.</p>
+  <div id="oscarVoiceMessages" class="oscar-messages" role="log"
+       aria-label="Voice conversation transcript" aria-live="off"></div>
+  <div id="voiceConfirmationContainer" aria-label="Voice action approvals"></div>
+</dialog>
+<div id="oscarVoiceStatus" hidden></div>
+<audio id="oscarVoiceAudio" autoplay></audio>
+
 <script>
   const csrfToken = document.querySelector('input[name="_csrf"]')?.value;
 
@@ -620,32 +646,146 @@ window.addEventListener("resize", () => {
     "confirmationContainer"
   );
 
-  function addOscarMessage(message, type = "oscar") {
-    const messageElement = document.createElement("div");
+ function appendOscarMessage(message, type = "oscar", citations = [], channel = "chat") {
+  const oscarMessages = document.getElementById(
+    channel === "voice" ? "oscarVoiceMessages" : "oscarMessages",
+  );
+  if (!oscarMessages) return;
+  const messageElement = document.createElement("div");
 
-    messageElement.className =
-      type === "user"
-        ? "chat-message user-message"
-        : "chat-message oscar-message";
+  messageElement.className =
+    type === "user"
+      ? "chat-message user-message"
+      : "chat-message oscar-message";
 
-    messageElement.textContent = message;
+  messageElement.style.whiteSpace = "pre-wrap";
+  const text = String(message ?? "");
+  let cursor = 0;
+  let sourceNumber = 0;
 
-    oscarMessages.appendChild(messageElement);
-    oscarMessages.scrollTop = oscarMessages.scrollHeight;
+  const sources =
+    type === "oscar" && Array.isArray(citations)
+      ? citations.filter((item) => item && typeof item === "object").sort((a, b) => a.end - b.end)
+      : [];
+
+  for (const citation of sources) {
+    if (!citation || typeof citation !== "object") continue;
+    if (
+      !Number.isInteger(citation.end) ||
+      citation.end < cursor ||
+      citation.end > text.length
+    ) {
+      continue;
+    }
+
+    let url;
+
+    try {
+      url = new URL(citation.url);
+    } catch {
+      continue;
+    }
+
+    if (!["https:", "http:"].includes(url.protocol)) continue;
+    if (url.username || url.password) continue;
+
+    messageElement.appendChild(
+      document.createTextNode(text.slice(cursor, citation.end)),
+    );
+
+    const link = document.createElement("a");
+    link.href = url.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = ` [Source ${++sourceNumber}]`;
+    link.title = citation.title || url.hostname;
+
+    messageElement.appendChild(link);
+    cursor = citation.end;
   }
 
- function showConfirmation(confirmation) {
-  confirmationContainer.innerHTML = "";
+  messageElement.appendChild(
+    document.createTextNode(text.slice(cursor)),
+  );
+
+  oscarMessages.appendChild(messageElement);
+  oscarMessages.scrollTop = oscarMessages.scrollHeight;
+}
+
+function addOscarMessage(message, type = "oscar", citations = []) {
+  appendOscarMessage(message, type, citations, "chat");
+}
+
+function addOscarVoiceMessage(message, type = "oscar", citations = []) {
+  appendOscarMessage(message, type, citations, "voice");
+}
+
+function openOscarVoiceActivity() {
+  const dialog = document.getElementById("oscarVoiceDialog");
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+document.getElementById("oscarVoiceActivityBtn")?.addEventListener(
+  "click", openOscarVoiceActivity,
+);
+
+function getOscarConfirmations(data) {
+  return Array.isArray(data?.confirmations)
+    ? data.confirmations
+    : data?.confirmation ? [data.confirmation] : [];
+}
+
+function notifyOscarApprovalOutcome(result, channel, voiceTarget) {
+  const outcome = result?.confirmationOutcome;
+  if (!outcome) return;
+  if (outcome.historySaved === false) {
+    appendOscarMessage("The approval was resolved, but conversation history could not be updated. Check the record before requesting it again.", "oscar", [], channel);
+  }
+  if (channel !== "voice" || !voiceTarget ||
+      voiceTarget.sessionId !== oscarVoiceSessionId ||
+      voiceTarget.channel !== oscarVoiceChannel ||
+      oscarVoiceChannel?.readyState !== "open") return;
+  // Server-generated outcome only. Updating context does not rerun business tools
+  // or start a competing audio response. OSCAR uses it on the next voice turn.
+  try {
+    oscarVoiceChannel.send(JSON.stringify({
+      type: "conversation.item.create",
+      item: { type: "message", role: "system", content: [{
+        type: "input_text", text: outcome.memoryMessage,
+      }] },
+    }));
+  } catch (error) {
+    console.error("Voice outcome update failed:", error);
+    appendOscarMessage("The approval was resolved, but voice could not be updated. Check the result shown here before repeating the request.", "oscar", [], "voice");
+  }
+}
+
+ function showConfirmation(confirmation, channel = "chat") {
+  const voiceTarget = channel === "voice"
+    ? { sessionId: oscarVoiceSessionId, channel: oscarVoiceChannel } : null;
+  const confirmationContainer = document.getElementById(
+    channel === "voice" ? "voiceConfirmationContainer" : "confirmationContainer",
+  );
+  const addOscarMessage = (message) => appendOscarMessage(message, "oscar", [], channel);
+  const confirmationId = confirmation?.confirmationId || confirmation?.id;
+  if (!confirmationId || typeof confirmationId !== "string") {
+    addOscarMessage("Unable to show approval: confirmation ID is missing.");
+    return;
+  }
+  if (Array.from(confirmationContainer.children).some(
+    (item) => item.dataset.confirmationId === confirmationId,
+  )) return;
 
   const card = document.createElement("div");
   card.className = "confirmation-card";
+  card.dataset.confirmationId = confirmationId;
 
   const title = document.createElement("strong");
   title.textContent = "Confirmation Required";
 
   const description = document.createElement("p");
   description.textContent =
-    confirmation.message || "OSCAR is requesting confirmation.";
+    confirmation.description || confirmation.message || "OSCAR is requesting confirmation.";
 
   const details = document.createElement("div");
   details.className = "confirmation-details";
@@ -672,6 +812,9 @@ window.addEventListener("resize", () => {
     });
   }
 
+  const approvalHint = document.createElement("p");
+  approvalHint.className = "small text-secondary";
+  approvalHint.textContent = "Review this action, then click Confirm or Cancel. Saying or typing yes does not execute it.";
   const actions = document.createElement("div");
   actions.className = "confirmation-actions";
 
@@ -687,6 +830,7 @@ window.addEventListener("resize", () => {
 
   // CANCEL
   cancelButton.addEventListener("click", async () => {
+  if (cancelButton.disabled || confirmButton.disabled) return;
   const confirmationId =
     confirmation.confirmationId || confirmation.id;
 
@@ -709,11 +853,12 @@ window.addEventListener("resize", () => {
           "Content-Type": "application/json",
           "x-csrf-token": csrfToken,
         },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ channel }),
       },
     );
 
     const result = await response.json();
+    notifyOscarApprovalOutcome(result, channel, voiceTarget);
 
     if (!response.ok || result.success !== true) {
       throw new Error(
@@ -735,6 +880,7 @@ window.addEventListener("resize", () => {
 });
   // CONFIRM
   confirmButton.addEventListener("click", async () => {
+    if (confirmButton.disabled || cancelButton.disabled) return;
     confirmButton.disabled = true;
     cancelButton.disabled = true;
 
@@ -743,6 +889,7 @@ window.addEventListener("resize", () => {
       Confirming...
     `;
 
+    let retryAfterBusy = false;
     try {
       const response = await fetch("/api/oscar/confirm", {
         method: "POST",
@@ -755,19 +902,22 @@ window.addEventListener("resize", () => {
         },
 
         body: JSON.stringify({
-          confirmationId: confirmation.id,
+          confirmationId,
+          channel,
         }),
       });
 
+      retryAfterBusy = response.status === 409;
       const result = await response.json();
+    notifyOscarApprovalOutcome(result, channel, voiceTarget);
 
       if (!response.ok || !result.success) {
         throw new Error(
-          result.error || "Unable to confirm the action."
+          result.error || result.data?.error || "Unable to confirm the action."
         );
       }
 
-      confirmationContainer.innerHTML = "";
+      card.remove();
 
       const actionResult = result.data;
 
@@ -835,7 +985,13 @@ window.addEventListener("resize", () => {
     } catch (error) {
       console.error("Confirmation error:", error);
 
-      confirmationContainer.innerHTML = "";
+      if (retryAfterBusy) {
+        confirmButton.disabled = false;
+        cancelButton.disabled = false;
+        confirmButton.textContent = "Confirm";
+      } else {
+        card.remove();
+      }
 
       addOscarMessage(
         error.message || "The action could not be completed."
@@ -853,9 +1009,11 @@ window.addEventListener("resize", () => {
     card.appendChild(details);
   }
 
+  card.appendChild(approvalHint);
   card.appendChild(actions);
 
   confirmationContainer.appendChild(card);
+  if (channel === "voice") openOscarVoiceActivity();
 }
 function formatConfirmationLabel(key) {
   const labels = {
@@ -920,7 +1078,7 @@ function formatConfirmationValue(key, value) {
         "Content-Type": "application/json",
         "x-csrf-token": csrfToken,
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, channel: "chat" }),
     });
 
     const result = await response.json();
@@ -940,10 +1098,14 @@ function formatConfirmationValue(key, value) {
       );
     }
 
-    addOscarMessage(result.data.response);
+  addOscarMessage(
+  result.data.response,
+  "oscar",
+  result.data.citations ?? [],
+);
 
-    if (result.data.confirmation) {
-      showConfirmation(result.data.confirmation);
+    for (const confirmation of getOscarConfirmations(result.data)) {
+      showConfirmation(confirmation, "chat");
     }
   } catch (error) {
     console.error("OSCAR chat error:", error);
@@ -982,7 +1144,6 @@ document.querySelectorAll("[data-oscar-prompt]").forEach((button) => {
 
 // ================= OSCAR REALTIME VOICE =================
 
-const oscarVoiceBtn = document.getElementById("oscarVoiceBtn");
 const oscarVoiceStatus = document.getElementById("oscarVoiceStatus");
 const oscarVoiceAudio = document.getElementById("oscarVoiceAudio");
 
@@ -1050,9 +1211,6 @@ function syncOscarVoiceControls() {
       ? "badge bg-success"
       : "badge bg-secondary";
 
-  if (oscarVoiceBtn) {
-    oscarVoiceBtn.disabled = !voiceConfigured || busy;
-  }
 }
 
 sidebarVoiceStart.addEventListener("click", () => {
@@ -1143,6 +1301,7 @@ async function handleOscarVoiceToolCall(event) {
       },
       body: JSON.stringify({
         message: args.message.trim(),
+        channel: "voice",
       }),
     });
 
@@ -1154,18 +1313,31 @@ async function handleOscarVoiceToolCall(event) {
       );
     }
 
+    // A late tool result must never populate a later voice session.
+    if (
+      sessionId !== oscarVoiceSessionId ||
+      channel !== oscarVoiceChannel ||
+      channel.readyState !== "open"
+    ) return;
+
     const data = result.data;
+    if (data.citations?.length) {
+      addOscarVoiceMessage(data.response, "oscar", data.citations);
+    }
 
     // Keep consequential actions behind OSCAR's existing confirmation UI.
-    if (data.confirmation) {
-      showConfirmation(data.confirmation);
+    const confirmations = getOscarConfirmations(data);
+    for (const confirmation of confirmations) {
+      showConfirmation(confirmation, "voice");
     }
 
     output = {
       success: true,
       response: data.response,
-      confirmationRequired: Boolean(data.confirmation),
+      confirmationRequired: confirmations.length > 0,
+      confirmations,
       confirmationDescription: data.confirmation?.description ?? null,
+      nextStep: confirmations.length ? "Ask the user to click Confirm or Cancel on each approval card. Wait for an application approval result; verbal yes does not execute an action. Do not recreate pending approvals." : null,
     };
   } catch (error) {
     console.error("OSCAR voice tool error:", error);
@@ -1197,7 +1369,13 @@ async function handleOscarVoiceToolCall(event) {
       );
 
       // Request one response after returning the tool result.
-      channel.send(JSON.stringify({ type: "response.create" }));
+      channel.send(JSON.stringify({
+        type: "response.create",
+        ...(output?.confirmationRequired ? { response: {
+          tool_choice: "none",
+          instructions: "In English, briefly tell the user to review and click Confirm or Cancel on each approval card in Voice activity. The actions are pending, not completed. Do not ask them to say yes, and do not repeat or recreate these actions. Then wait.",
+        } } : {}),
+      }));
     }
 
 function handleOscarVoiceEvent(event) {
@@ -1216,13 +1394,13 @@ function handleOscarVoiceEvent(event) {
 
     case "conversation.item.input_audio_transcription.completed":
       if (event.transcript?.trim()) {
-        addOscarMessage(event.transcript.trim(), "user");
+        addOscarVoiceMessage(event.transcript.trim(), "user");
       }
       break;
 
     case "response.output_audio_transcript.done":
       if (event.transcript?.trim()) {
-        addOscarMessage(event.transcript.trim());
+        addOscarVoiceMessage(event.transcript.trim());
       }
 
       setOscarVoiceStatus("OSCAR is listening. Keep talking.");
@@ -1263,7 +1441,6 @@ async function startOscarVoice() {
   }
 
   oscarVoiceStarting = true;
-  oscarVoiceBtn.disabled = true;
   setOscarVoiceStatus("Connecting to OSCAR Voice...");
 
   try {
@@ -1439,9 +1616,6 @@ async function startOscarVoice() {
 
     oscarVoiceActive = true;
 
-    oscarVoiceBtn.setAttribute("aria-pressed", "true");
-    oscarVoiceBtn.title = "End voice conversation";
-    oscarVoiceBtn.innerHTML = '<i class="bi bi-telephone-x-fill"></i>';
 
     setOscarVoiceStatus("Connected. You can speak to OSCAR.");
     } catch (error) {
@@ -1494,12 +1668,6 @@ async function stopOscarVoice() {
       oscarVoiceAudio.srcObject = null;
     }
 
-    if (oscarVoiceBtn) {
-    oscarVoiceBtn.disabled = false;
-    oscarVoiceBtn.setAttribute("aria-pressed", "false");
-    oscarVoiceBtn.title = "Start voice conversation";
-    oscarVoiceBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
-    }
 
     setOscarVoiceStatus("Voice conversation ended.");
    } finally {
@@ -1508,14 +1676,6 @@ async function stopOscarVoice() {
     syncOscarVoiceControls();
   }
 }
-
-oscarVoiceBtn?.addEventListener("click", () => {
-  if (oscarVoiceActive) {
-    void stopOscarVoice();
-  } else {
-    void startOscarVoice();
-  }
-});
 
 // Release the microphone if the user leaves the dashboard.
 window.addEventListener("pagehide", () => {

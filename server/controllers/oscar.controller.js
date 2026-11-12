@@ -1,12 +1,13 @@
+import { requireOscarChannel } from "../services/oscar-channel.service.js";
 import { runOscar } from "../services/oscar.service.js";
 import { createToolContext } from "../tools/tool-context.js";
-import { consumeConfirmation } from "../services/confirmation.service.js";
-import { executeConfirmedAction } from "../services/confirmed-action.service.js";
+import { resolveOscarApproval } from "../services/oscar-approval.service.js";
 import { createOscarVoiceSession as createOscarVoiceSessionService } from "../services/oscar-voice.service.js";
 
 export const chatWithOscar = async (req, res, next) => {
   try {
-    const { message } = req.body;
+    const { message } = req.body ?? {};
+    const channel = requireOscarChannel(req.body?.channel);
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return res.status(400).json({
@@ -18,6 +19,7 @@ export const chatWithOscar = async (req, res, next) => {
     const context = {
       ...createToolContext(req),
       ...req.oscarPrincipal,
+      channel,
     };
 
     const result = await runOscar(message.trim(), context);
@@ -33,35 +35,12 @@ export const chatWithOscar = async (req, res, next) => {
 
 export const confirmOscarAction = async (req, res, next) => {
   try {
-    const { confirmationId } = req.body;
-
-    if (!confirmationId || typeof confirmationId !== "string") {
-      return res.status(400).json({
-        success: false,
-        error: "Confirmation ID is required.",
-      });
-    }
-
-    const { userId } = req.oscarPrincipal;
-
-    const confirmation = consumeConfirmation(confirmationId, userId);
-
-    if (!confirmation) {
-      return res.status(404).json({
-        success: false,
-        error: "Confirmation not found, expired, or not authorized.",
-      });
-    }
-
-    const result = await executeConfirmedAction(confirmation, {
-      ...req.oscarPrincipal,
-      req,
+    const { httpStatus, ...result } = await resolveOscarApproval({
+      confirmationId: req.body?.confirmationId,
+      channel: req.body?.channel,
+      context: { ...req.oscarPrincipal, req },
     });
-
-    return res.status(200).json({
-      success: result.success,
-      data: result,
-    });
+    return res.status(httpStatus).json(result);
   } catch (error) {
     next(error);
   }

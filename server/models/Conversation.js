@@ -30,6 +30,10 @@ const conversationSchema = new mongoose.Schema(
       type: [conversationMessageSchema],
       default: [],
     },
+    voiceMessages: {
+      type: [conversationMessageSchema],
+      default: [],
+    },
   },
   { timestamps: true },
 );

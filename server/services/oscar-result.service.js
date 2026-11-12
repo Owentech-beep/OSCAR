@@ -39,6 +39,22 @@ export function classifyOscarToolResult(output) {
   return { status: "unknown", success: null };
 }
 
+export function extractOscarConfirmations(result) {
+  const confirmations = [];
+  const seen = new Set();
+  for (const item of result?.newItems ?? []) {
+    if (item.type !== "tool_call_output_item") continue;
+    const output = parseToolOutput(item.output);
+    const confirmation = output?.confirmation;
+    const id = confirmation?.confirmationId;
+    if (output?.success === false || output?.requiresConfirmation !== true ||
+        typeof id !== "string" || !id.trim() || seen.has(id)) continue;
+    seen.add(id);
+    confirmations.push(confirmation);
+  }
+  return confirmations;
+}
+
 export function extractOscarConfirmation(result) {
   for (const item of [...(result?.newItems ?? [])].reverse()) {
     if (item.type !== "tool_call_output_item") continue;
@@ -81,4 +97,75 @@ export function classifyOscarRunResult(result) {
   }
 
   return "completed";
+}
+
+export function extractOscarCitations(result) {
+  const response = extractOscarResponse(result);
+
+  if (typeof response !== "string") return [];
+
+  const citations = [];
+  const seen = new Set();
+
+  for (const item of result?.newItems ?? []) {
+    if (item.type !== "message_output_item") continue;
+
+    for (const part of item.rawItem?.content ?? []) {
+      if (part.type !== "output_text" || typeof part.text !== "string") {
+        continue;
+      }
+
+      const offset = response.indexOf(part.text);
+      if (offset < 0) continue;
+
+      const annotations =
+        part.annotations ?? part.providerData?.annotations ?? [];
+
+      if (!Array.isArray(annotations)) continue;
+
+      for (const annotation of annotations) {
+        if (annotation.type !== "url_citation") continue;
+
+        const start = annotation.start_index;
+        const end = annotation.end_index;
+
+        if (
+          !Number.isInteger(start) ||
+          !Number.isInteger(end) ||
+          start < 0 ||
+          end < start ||
+          end > part.text.length
+        ) {
+          continue;
+        }
+
+        let url;
+
+        try {
+          url = new URL(annotation.url);
+        } catch {
+          continue;
+        }
+
+        if (!["https:", "http:"].includes(url.protocol)) continue;
+        if (url.username || url.password) continue;
+
+        const key = `${offset + end}:${url.href}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        citations.push({
+          start: offset + start,
+          end: offset + end,
+          url: url.href,
+          title:
+            typeof annotation.title === "string"
+              ? annotation.title
+              : url.hostname,
+        });
+      }
+    }
+  }
+
+  return citations.sort((a, b) => a.end - b.end);
 }

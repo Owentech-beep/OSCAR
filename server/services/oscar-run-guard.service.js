@@ -1,11 +1,15 @@
+import { requireOscarChannel } from "./oscar-channel.service.js";
+
 const activeUsers = new Set();
 
-export async function withOscarRunLock(userId, operation) {
+export async function withOscarRunLock(userId, operation, channel = "chat") {
   if (typeof userId !== "string" || !userId.trim()) {
     throw new Error("OSCAR user context is missing.");
   }
 
-  if (activeUsers.has(userId)) {
+  const lockKey = JSON.stringify([userId, requireOscarChannel(channel)]);
+
+  if (activeUsers.has(lockKey)) {
     const error = new Error(
       "OSCAR is still processing your previous request. Please wait.",
     );
@@ -15,12 +19,12 @@ export async function withOscarRunLock(userId, operation) {
     throw error;
   }
 
-  activeUsers.add(userId);
+  activeUsers.add(lockKey);
 
   try {
     return await operation();
   } finally {
-    activeUsers.delete(userId);
+    activeUsers.delete(lockKey);
   }
 }
 
